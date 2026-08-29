@@ -102,4 +102,5 @@ Based on these entries, write a short, warm reflection (3-4 sentences) covering:
         return jsonify({'error': f'Failed to generate insight: {str(e)}'}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
