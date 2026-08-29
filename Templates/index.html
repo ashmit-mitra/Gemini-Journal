@@ -81,7 +81,6 @@
     color: var(--text-muted);
   }
 
-  /* Buttons */
   button {
     font-family: 'Inter', sans-serif;
     font-weight: 500;
@@ -121,7 +120,6 @@
   input::placeholder, textarea::placeholder { color: var(--text-muted); }
   input:focus-visible, textarea:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
 
-  /* Auth card */
   .auth-card {
     background: rgba(255,255,255,0.03);
     border: 1px solid rgba(154,157,196,0.2);
@@ -137,7 +135,6 @@
   .auth-card + .auth-card { margin-top: 18px; }
   .field-row { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
 
-  /* Action row */
   .action-row { display: flex; gap: 10px; margin: 22px 0 16px; flex-wrap: wrap; }
 
   .panel {
@@ -159,7 +156,6 @@
   }
   .panel b { font-family: 'Fraunces', serif; font-weight: 600; }
 
-  /* Chat log — notebook page */
   #chat-log {
     background: var(--panel);
     border-radius: 14px;
@@ -197,7 +193,6 @@
   .composer { display: flex; gap: 10px; }
   .composer input { flex: 1; }
 
-  /* Entries panel */
   .entry-item {
     background: var(--panel);
     color: var(--text-dark);
@@ -212,6 +207,17 @@
   .entry-actions button { padding: 6px 12px; font-size: 0.78rem; border-color: rgba(42,38,32,0.2); color: var(--text-dark); }
   .entry-actions button:hover { background: rgba(207,159,69,0.15); }
   .entry-item textarea { color: var(--text-dark); background: #fff; border-color: rgba(42,38,32,0.2); }
+
+  .entry-filters { display: flex; gap: 8px; margin-bottom: 12px; }
+  .entry-filters input { flex: 1; }
+  .entry-filters select {
+    font-family: 'Inter', sans-serif;
+    padding: 10px 12px;
+    border-radius: 7px;
+    border: 1px solid rgba(154, 157, 196, 0.3);
+    background: rgba(255,255,255,0.04);
+    color: var(--text-main);
+  }
 
   ::-webkit-scrollbar { width: 8px; }
   ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 4px; }
@@ -265,7 +271,25 @@
     </div>
 
     <div id="insights-panel" class="panel" style="display:none;"></div>
-    <div id="entries-panel" style="display:none;"></div>
+    <div id="entries-panel" style="display:none;">
+      <div class="entry-filters">
+        <input type="text" id="entry-search" placeholder="Search entries…" oninput="renderFilteredEntries()">
+        <select id="mood-filter" onchange="renderFilteredEntries()">
+          <option value="">All moods</option>
+          <option value="happy">😊 Happy</option>
+          <option value="sad">😢 Sad</option>
+          <option value="anxious">😰 Anxious</option>
+          <option value="angry">😠 Angry</option>
+          <option value="excited">🤩 Excited</option>
+          <option value="calm">😌 Calm</option>
+          <option value="neutral">😐 Neutral</option>
+          <option value="grateful">🙏 Grateful</option>
+          <option value="tired">😴 Tired</option>
+          <option value="hopeful">🌱 Hopeful</option>
+        </select>
+      </div>
+      <div id="entries-list"></div>
+    </div>
 
     <div id="chat-log"></div>
     <div class="composer">
@@ -384,6 +408,8 @@
   }
 
   let entriesVisible = false;
+  let allEntries = [];
+
   async function toggleEntries() {
     const panel = document.getElementById('entries-panel');
     entriesVisible = !entriesVisible;
@@ -396,8 +422,8 @@
   }
 
   async function loadEntries() {
-    const panel = document.getElementById('entries-panel');
-    panel.innerHTML = 'Loading…';
+    const listDiv = document.getElementById('entries-list');
+    listDiv.innerHTML = 'Loading…';
     try {
       const user = auth.currentUser;
       const idToken = await user.getIdToken();
@@ -406,28 +432,44 @@
         headers: { 'Authorization': 'Bearer ' + idToken }
       });
       const data = await response.json();
-      if (!data.entries || data.entries.length === 0) {
-        panel.innerHTML = '<div class="panel">No entries yet — write your first one below.</div>';
-        return;
-      }
-      panel.innerHTML = '';
-      data.entries.forEach(entry => {
-        const emoji = moodEmojis[entry.mood] || '';
-        const div = document.createElement('div');
-        div.className = 'entry-item';
-        div.innerHTML = `
-          <div><span class="mood-seal" title="${entry.mood}">${emoji}</span> <span class="entry-text">${entry.user_message}</span></div>
-          <div class="entry-reply">${entry.ai_reply}</div>
-          <div class="entry-actions">
-            <button onclick="startEdit('${entry.id}', this)">Edit</button>
-            <button class="btn-ghost-danger" onclick="deleteEntry('${entry.id}')">Delete</button>
-          </div>
-        `;
-        panel.appendChild(div);
-      });
+      allEntries = data.entries || [];
+      renderFilteredEntries();
     } catch (err) {
-      panel.innerHTML = 'Error: ' + err.message;
+      listDiv.innerHTML = 'Error: ' + err.message;
     }
+  }
+
+  function renderFilteredEntries() {
+    const listDiv = document.getElementById('entries-list');
+    const searchTerm = document.getElementById('entry-search').value.toLowerCase();
+    const moodTerm = document.getElementById('mood-filter').value;
+
+    const filtered = allEntries.filter(entry => {
+      const matchesSearch = !searchTerm || entry.user_message.toLowerCase().includes(searchTerm);
+      const matchesMood = !moodTerm || entry.mood === moodTerm;
+      return matchesSearch && matchesMood;
+    });
+
+    if (filtered.length === 0) {
+      listDiv.innerHTML = '<div class="panel">No matching entries.</div>';
+      return;
+    }
+
+    listDiv.innerHTML = '';
+    filtered.forEach(entry => {
+      const emoji = moodEmojis[entry.mood] || '';
+      const div = document.createElement('div');
+      div.className = 'entry-item';
+      div.innerHTML = `
+        <div><span class="mood-seal" title="${entry.mood}">${emoji}</span> <span class="entry-text">${entry.user_message}</span></div>
+        <div class="entry-reply">${entry.ai_reply}</div>
+        <div class="entry-actions">
+          <button onclick="startEdit('${entry.id}', this)">Edit</button>
+          <button class="btn-ghost-danger" onclick="deleteEntry('${entry.id}')">Delete</button>
+        </div>
+      `;
+      listDiv.appendChild(div);
+    });
   }
 
   function startEdit(entryId, btn) {
