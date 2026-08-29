@@ -89,53 +89,63 @@
       chatLog.innerHTML += `<div class="user-msg"><b>You:</b> ${message}</div>`;
       input.value = '';
 
-      const user = auth.currentUser;
-      const idToken = await user.getIdToken();
+      try {
+        const user = auth.currentUser;
+        const idToken = await user.getIdToken();
 
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + idToken
-        },
-        body: JSON.stringify({ message: message })
-      });
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + idToken
+          },
+          body: JSON.stringify({ message: message })
+        });
 
-      const data = await response.json();
-      if (data.reply) {
-        chatLog.innerHTML += `<div class="ai-msg"><b>Gemini:</b> ${data.reply}</div>`;
-      } else {
-        chatLog.innerHTML += `<div class="ai-msg" style="color:red;">Error: ${data.error}</div>`;
+        const data = await response.json();
+        if (data.reply) {
+          const moodEmojis = {
+            happy: '😊', sad: '😢', anxious: '😰', angry: '😠',
+            excited: '🤩', calm: '😌', neutral: '😐', grateful: '🙏',
+            tired: '😴', hopeful: '🌱'
+          };
+          const emoji = moodEmojis[data.mood] || '';
+          chatLog.innerHTML += `<div class="ai-msg"><b>Gemini:</b> ${data.reply} <span title="${data.mood}">${emoji}</span></div>`;
+        } else {
+          chatLog.innerHTML += `<div class="ai-msg" style="color:red;">Error: ${data.error}</div>`;
+        }
+      } catch (err) {
+        chatLog.innerHTML += `<div class="ai-msg" style="color:red;">Error: ${err.message}</div>`;
       }
       chatLog.scrollTop = chatLog.scrollHeight;
     }
 
- async function getInsights() {
-  const panel = document.getElementById('insights-panel');
-  panel.style.display = 'block';
-  panel.innerHTML = 'Thinking...';
+    async function getInsights() {
+      const panel = document.getElementById('insights-panel');
+      panel.style.display = 'block';
+      panel.innerHTML = 'Thinking...';
 
-  try {
-    const user = auth.currentUser;
-    const idToken = await user.getIdToken();
+      try {
+        const user = auth.currentUser;
+        const idToken = await user.getIdToken();
 
-    const response = await fetch('/api/insights', {
-      method: 'GET',
-      headers: {
-        'Authorization': 'Bearer ' + idToken
+        const response = await fetch('/api/insights', {
+          method: 'GET',
+          headers: {
+            'Authorization': 'Bearer ' + idToken
+          }
+        });
+
+        const data = await response.json();
+        if (data.insight) {
+          panel.innerHTML = '<b>Your Reflection:</b><br>' + data.insight;
+        } else {
+          panel.innerHTML = 'Error: ' + data.error;
+        }
+      } catch (err) {
+        panel.innerHTML = 'Error: ' + err.message;
       }
-    });
-
-    const data = await response.json();
-    if (data.insight) {
-      panel.innerHTML = '<b>Your Reflection:</b><br>' + data.insight;
-    } else {
-      panel.innerHTML = 'Error: ' + data.error;
     }
-  } catch (err) {
-    panel.innerHTML = 'Error: ' + err.message;
-  }
-}
   </script>
 </body>
 </html>

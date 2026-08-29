@@ -14,7 +14,6 @@ firebase_admin.initialize_app(cred, {'projectId': 'gemini-journal-ai-1a8c1'})
 db = firestore.client()
 
 gemini_client = genai.Client(api_key=os.environ.get('GOOGLE_API_KEY'))
-print("Using API key starting with:", os.environ.get('GOOGLE_API_KEY', 'NOT FOUND')[:10])
 
 @app.route('/')
 def home():
@@ -55,13 +54,29 @@ def chat():
         print(f"Gemini API error in /api/chat: {e}")
         return jsonify({'error': f'Failed to generate reply: {str(e)}'}), 500
 
+    mood = "neutral"
+    try:
+        mood_prompt = f"""Classify the mood of this journal entry in exactly one word from this list: happy, sad, anxious, angry, excited, calm, neutral, grateful, tired, hopeful.
+
+Entry: "{user_message}"
+
+Respond with only the single mood word, nothing else."""
+        mood_response = gemini_client.models.generate_content(
+            model="gemini-3.6-flash",
+            contents=mood_prompt
+        )
+        mood = mood_response.text.strip().lower()
+    except Exception as e:
+        print(f"Mood detection error: {e}")
+
     entries_ref.add({
         'user_message': user_message,
         'ai_reply': ai_reply,
+        'mood': mood,
         'timestamp': firestore.SERVER_TIMESTAMP
     })
 
-    return jsonify({'reply': ai_reply})
+    return jsonify({'reply': ai_reply, 'mood': mood})
 
 @app.route('/api/insights', methods=['GET'])
 def insights():
