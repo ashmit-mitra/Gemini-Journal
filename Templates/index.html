@@ -122,6 +122,27 @@
   .btn-ghost-danger { color: var(--danger); border-color: rgba(181,101,79,0.35); }
   .btn-ghost-danger:hover { background: rgba(181,101,79,0.12); border-color: var(--danger); }
 
+  .btn-mic {
+    width: 42px;
+    padding: 9px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+  .btn-mic.recording {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: #fff;
+    animation: pulse 1.2s infinite;
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(181,101,79,0.5); }
+    70% { box-shadow: 0 0 0 8px rgba(181,101,79,0); }
+    100% { box-shadow: 0 0 0 0 rgba(181,101,79,0); }
+  }
+
   input[type="email"], input[type="password"], input[type="text"], textarea {
     font-family: 'Inter', sans-serif;
     font-size: 0.92rem;
@@ -310,6 +331,7 @@
     <div id="chat-log"></div>
     <div class="composer">
       <input type="text" id="entry-input" placeholder="Write your journal entry or thought…">
+      <button id="mic-btn" class="btn-mic" onclick="toggleVoiceInput()" title="Speak your entry" style="display:none;">🎤</button>
       <button class="btn-primary" onclick="sendEntry()">Send</button>
     </div>
   </div>
@@ -565,6 +587,70 @@
       }
     } catch (err) {
       alert('Error: ' + err.message);
+    }
+  }
+
+  // Voice-to-text
+  let recognition = null;
+  let isRecording = false;
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (SpeechRecognition) {
+    document.addEventListener('DOMContentLoaded', () => {
+      const micBtn = document.getElementById('mic-btn');
+      if (micBtn) micBtn.style.display = 'flex';
+    });
+
+    recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    let baseText = '';
+
+    recognition.onstart = () => {
+      isRecording = true;
+      baseText = document.getElementById('entry-input').value;
+      const micBtn = document.getElementById('mic-btn');
+      micBtn.classList.add('recording');
+    };
+
+    recognition.onresult = (event) => {
+      let transcript = '';
+      for (let i = 0; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+      }
+      const input = document.getElementById('entry-input');
+      input.value = (baseText ? baseText + ' ' : '') + transcript;
+    };
+
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error);
+      stopRecording();
+    };
+
+    recognition.onend = () => {
+      stopRecording();
+    };
+  } else {
+    document.addEventListener('DOMContentLoaded', () => {
+      const micBtn = document.getElementById('mic-btn');
+      if (micBtn) micBtn.style.display = 'none';
+    });
+  }
+
+  function stopRecording() {
+    isRecording = false;
+    const micBtn = document.getElementById('mic-btn');
+    if (micBtn) micBtn.classList.remove('recording');
+  }
+
+  function toggleVoiceInput() {
+    if (!recognition) return;
+    if (isRecording) {
+      recognition.stop();
+    } else {
+      recognition.start();
     }
   }
 </script>
