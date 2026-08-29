@@ -12,7 +12,6 @@
 <style>
   :root {
     --ink: #171a2e;
-    --ink-2: #232748;
     --panel: #f4efe3;
     --panel-line: #e2dac8;
     --gold: #cf9f45;
@@ -22,6 +21,31 @@
     --text-dark: #2a2620;
     --text-dark-muted: #6b6355;
     --danger: #b5654f;
+    --bg-glow-1: #2a2f57;
+    --bg-glow-2: #241f42;
+    --border-soft: rgba(154, 157, 196, 0.25);
+    --border-soft-2: rgba(154, 157, 196, 0.3);
+    --hover-tint: rgba(207,159,69,0.1);
+    --field-bg: rgba(255,255,255,0.04);
+  }
+
+  [data-theme="light"] {
+    --ink: #f6f1e4;
+    --panel: #fffaf0;
+    --panel-line: #ecdfc4;
+    --gold: #b8823a;
+    --gold-soft: #8f651f;
+    --text-main: #3a3225;
+    --text-muted: #7a715c;
+    --text-dark: #2a2620;
+    --text-dark-muted: #6b6355;
+    --danger: #a1543f;
+    --bg-glow-1: #f0e2c0;
+    --bg-glow-2: #f7ead0;
+    --border-soft: rgba(122, 113, 92, 0.25);
+    --border-soft-2: rgba(122, 113, 92, 0.3);
+    --hover-tint: rgba(184,130,58,0.12);
+    --field-bg: rgba(0,0,0,0.03);
   }
 
   * { box-sizing: border-box; }
@@ -30,14 +54,15 @@
     margin: 0;
     min-height: 100vh;
     background:
-      radial-gradient(ellipse at 20% -10%, #2a2f57 0%, transparent 55%),
-      radial-gradient(ellipse at 90% 10%, #241f42 0%, transparent 50%),
+      radial-gradient(ellipse at 20% -10%, var(--bg-glow-1) 0%, transparent 55%),
+      radial-gradient(ellipse at 90% 10%, var(--bg-glow-2) 0%, transparent 50%),
       var(--ink);
     font-family: 'Inter', sans-serif;
     color: var(--text-main);
     display: flex;
     justify-content: center;
     padding: 48px 20px 80px;
+    transition: background 0.2s ease, color 0.2s ease;
   }
 
   .page {
@@ -51,7 +76,7 @@
     justify-content: space-between;
     margin-bottom: 28px;
     padding-bottom: 18px;
-    border-bottom: 1px solid rgba(154, 157, 196, 0.25);
+    border-bottom: 1px solid var(--border-soft);
     flex-wrap: wrap;
     gap: 12px;
   }
@@ -87,7 +112,7 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: rgba(207,159,69,0.12);
+    background: var(--hover-tint);
     border: 1px solid rgba(207,159,69,0.35);
     color: var(--gold-soft);
     font-family: 'IBM Plex Mono', monospace;
@@ -96,19 +121,30 @@
     border-radius: 20px;
   }
 
+  .btn-theme {
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    border-radius: 50%;
+  }
+
   button {
     font-family: 'Inter', sans-serif;
     font-weight: 500;
     font-size: 0.85rem;
     cursor: pointer;
     border-radius: 7px;
-    border: 1px solid rgba(154, 157, 196, 0.3);
-    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border-soft-2);
+    background: var(--field-bg);
     color: var(--text-main);
     padding: 9px 16px;
     transition: border-color 0.15s ease, background 0.15s ease;
   }
-  button:hover { border-color: var(--gold-soft); background: rgba(207,159,69,0.1); }
+  button:hover { border-color: var(--gold-soft); background: var(--hover-tint); }
   button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 
   .btn-primary {
@@ -148,8 +184,8 @@
     font-size: 0.92rem;
     padding: 10px 12px;
     border-radius: 7px;
-    border: 1px solid rgba(154, 157, 196, 0.3);
-    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border-soft-2);
+    background: var(--field-bg);
     color: var(--text-main);
     width: 100%;
   }
@@ -157,8 +193,8 @@
   input:focus-visible, textarea:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
 
   .auth-card {
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(154,157,196,0.2);
+    background: var(--field-bg);
+    border: 1px solid var(--border-soft);
     border-radius: 14px;
     padding: 28px;
   }
@@ -180,7 +216,7 @@
     padding: 18px 20px;
     margin-bottom: 16px;
     position: relative;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
   }
   .panel::before {
     content: '';
@@ -199,7 +235,7 @@
     height: 320px;
     overflow-y: auto;
     margin-bottom: 14px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
     background-image: repeating-linear-gradient(
       to bottom,
       transparent,
@@ -235,7 +271,7 @@
     border-radius: 12px;
     padding: 16px 18px;
     margin: 0 0 12px;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.22);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.18);
   }
   .entry-item .entry-text { font-weight: 500; }
   .entry-item .entry-reply { color: var(--text-dark-muted); font-size: 0.88rem; margin-top: 6px; }
@@ -250,8 +286,8 @@
     font-family: 'Inter', sans-serif;
     padding: 10px 12px;
     border-radius: 7px;
-    border: 1px solid rgba(154, 157, 196, 0.3);
-    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border-soft-2);
+    background: var(--field-bg);
     color: var(--text-main);
   }
 
@@ -268,6 +304,7 @@
         <span class="eyebrow">Private &amp; reflective</span>
         <h1>Gemini Journal</h1>
       </div>
+      <button class="btn-theme" onclick="toggleTheme()" id="theme-toggle-out" title="Toggle theme">🌙</button>
     </div>
 
     <div class="auth-card">
@@ -298,6 +335,7 @@
       <div class="user-strip">
         <span id="streak-badge" class="streak-badge" style="display:none;"></span>
         <span id="user-email"></span>
+        <button class="btn-theme" onclick="toggleTheme()" id="theme-toggle-in" title="Toggle theme">🌙</button>
         <button onclick="logOut()">Log out</button>
       </div>
     </div>
@@ -355,6 +393,26 @@
     excited: '🤩', calm: '😌', neutral: '😐', grateful: '🙏',
     tired: '😴', hopeful: '🌱'
   };
+
+  // Theme handling
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    const icon = theme === 'light' ? '☀️' : '🌙';
+    const outBtn = document.getElementById('theme-toggle-out');
+    const inBtn = document.getElementById('theme-toggle-in');
+    if (outBtn) outBtn.textContent = icon;
+    if (inBtn) inBtn.textContent = icon;
+  }
+
+  function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme') || 'dark';
+    const next = current === 'light' ? 'dark' : 'light';
+    localStorage.setItem('gj-theme', next);
+    applyTheme(next);
+  }
+
+  const savedTheme = localStorage.getItem('gj-theme') || 'dark';
+  applyTheme(savedTheme);
 
   function signUp() {
     const email = document.getElementById('signup-email').value;
