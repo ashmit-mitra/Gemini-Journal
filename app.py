@@ -5,6 +5,7 @@ from flask import Flask, render_template, request, jsonify
 import firebase_admin
 from firebase_admin import credentials, auth, firestore
 from google import genai
+from datetime import datetime, timedelta
 import os
 
 app = Flask(__name__)
@@ -138,6 +139,43 @@ def edit_entry(entry_id):
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route('/api/streak', methods=['GET'])
+def get_streak():
+    id_token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    try:
+        decoded_token = auth.verify_id_token(id_token)
+        uid = decoded_token['uid']
+    except Exception:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    try:
+        entries_ref = db.collection('users').document(uid).collection('entries')
+        all_entries = entries_ref.order_by('timestamp', direction=firestore.Query.DESCENDING).get()
+
+        entry_dates = set()
+        for entry in all_entries:
+            entry_data = entry.to_dict()
+            ts = entry_data.get('timestamp')
+            if ts:
+                entry_dates.add(ts.date())
+
+        if not entry_dates:
+            return jsonify({'streak': 0, 'journaled_today': False})
+
+        today = datetime.utcnow().date()
+        journaled_today = today in entry_dates
+
+        streak = 0
+        check_date = today if journaled_today else today - timedelta(days=1)
+        while check_date in entry_dates:
+            streak += 1
+            check_date -= timedelta(days=1)
+
+        return jsonify({'streak': streak, 'journaled_today': journaled_today})
+    except Exception as e:
+        print(f"Streak calculation error: {e}")
+        return jsonify({'streak': 0, 'journaled_today': False})
 
 @app.route('/api/insights', methods=['GET'])
 def insights():

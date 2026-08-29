@@ -52,6 +52,8 @@
     margin-bottom: 28px;
     padding-bottom: 18px;
     border-bottom: 1px solid rgba(154, 157, 196, 0.25);
+    flex-wrap: wrap;
+    gap: 12px;
   }
 
   .masthead h1 {
@@ -79,6 +81,19 @@
     gap: 12px;
     font-size: 0.88rem;
     color: var(--text-muted);
+  }
+
+  .streak-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(207,159,69,0.12);
+    border: 1px solid rgba(207,159,69,0.35);
+    color: var(--gold-soft);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    padding: 6px 12px;
+    border-radius: 20px;
   }
 
   button {
@@ -260,6 +275,7 @@
         <h1>Gemini Journal</h1>
       </div>
       <div class="user-strip">
+        <span id="streak-badge" class="streak-badge" style="display:none;"></span>
         <span id="user-email"></span>
         <button onclick="logOut()">Log out</button>
       </div>
@@ -341,11 +357,33 @@
       document.getElementById('signed-out').style.display = 'none';
       document.getElementById('signed-in').style.display = 'block';
       document.getElementById('user-email').textContent = user.email;
+      loadStreak();
     } else {
       document.getElementById('signed-out').style.display = 'block';
       document.getElementById('signed-in').style.display = 'none';
     }
   });
+
+  async function loadStreak() {
+    try {
+      const user = auth.currentUser;
+      const idToken = await user.getIdToken();
+      const response = await fetch('/api/streak', {
+        method: 'GET',
+        headers: { 'Authorization': 'Bearer ' + idToken }
+      });
+      const data = await response.json();
+      const badge = document.getElementById('streak-badge');
+      if (data.streak > 0) {
+        badge.style.display = 'inline-flex';
+        badge.textContent = `🔥 ${data.streak} day${data.streak === 1 ? '' : 's'}`;
+      } else {
+        badge.style.display = 'none';
+      }
+    } catch (err) {
+      console.error('Streak load error:', err);
+    }
+  }
 
   async function sendEntry() {
     const input = document.getElementById('entry-input');
@@ -373,6 +411,7 @@
       if (data.reply) {
         const emoji = moodEmojis[data.mood] || '';
         chatLog.innerHTML += `<div class="ai-msg"><b>Gemini</b>${data.reply} <span class="mood-seal" title="${data.mood}">${emoji}</span></div>`;
+        loadStreak();
       } else {
         chatLog.innerHTML += `<div class="ai-msg" style="color:#b5654f;">Error: ${data.error}</div>`;
       }
