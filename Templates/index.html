@@ -11,6 +11,10 @@
     .ai-msg { color: #333; margin: 8px 0; background: #f5f5f5; padding: 8px; border-radius: 6px; }
     input, button { padding: 8px; margin: 4px 0; }
     #entry-input { width: 70%; }
+    .entry-item { border: 1px solid #ddd; padding: 10px; margin: 8px 0; border-radius: 6px; }
+    .entry-item textarea { width: 100%; box-sizing: border-box; }
+    .entry-actions { margin-top: 6px; }
+    .entry-actions button { margin-right: 6px; font-size: 0.85em; padding: 4px 8px; }
   </style>
 </head>
 <body>
@@ -32,7 +36,9 @@
     <p>Welcome, <span id="user-email"></span>! <button onclick="logOut()">Log Out</button></p>
 <div style="margin: 15px 0;">
   <button onclick="getInsights()">✨ Get Reflection Insights</button>
+  <button onclick="toggleEntries()">📔 My Entries</button>
   <div id="insights-panel" style="display:none; background:#eef7ff; padding:12px; border-radius:6px; margin-top:10px;"></div>
+  <div id="entries-panel" style="display:none; margin-top:10px;"></div>
 </div>
     <div id="chat-log"></div>
     <input type="text" id="entry-input" placeholder="Write your journal entry or thought...">
@@ -50,6 +56,12 @@
     };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
+
+    const moodEmojis = {
+      happy: '😊', sad: '😢', anxious: '😰', angry: '😠',
+      excited: '🤩', calm: '😌', neutral: '😐', grateful: '🙏',
+      tired: '😴', hopeful: '🌱'
+    };
 
     function signUp() {
       const email = document.getElementById('signup-email').value;
@@ -104,11 +116,6 @@
 
         const data = await response.json();
         if (data.reply) {
-          const moodEmojis = {
-            happy: '😊', sad: '😢', anxious: '😰', angry: '😠',
-            excited: '🤩', calm: '😌', neutral: '😐', grateful: '🙏',
-            tired: '😴', hopeful: '🌱'
-          };
           const emoji = moodEmojis[data.mood] || '';
           chatLog.innerHTML += `<div class="ai-msg"><b>Gemini:</b> ${data.reply} <span title="${data.mood}">${emoji}</span></div>`;
         } else {
@@ -144,6 +151,110 @@
         }
       } catch (err) {
         panel.innerHTML = 'Error: ' + err.message;
+      }
+    }
+
+    let entriesVisible = false;
+    async function toggleEntries() {
+      const panel = document.getElementById('entries-panel');
+      entriesVisible = !entriesVisible;
+      if (!entriesVisible) {
+        panel.style.display = 'none';
+        return;
+      }
+      panel.style.display = 'block';
+      await loadEntries();
+    }
+
+    async function loadEntries() {
+      const panel = document.getElementById('entries-panel');
+      panel.innerHTML = 'Loading...';
+      try {
+        const user = auth.currentUser;
+        const idToken = await user.getIdToken();
+        const response = await fetch('/api/entries', {
+          method: 'GET',
+          headers: { 'Authorization': 'Bearer ' + idToken }
+        });
+        const data = await response.json();
+        if (!data.entries || data.entries.length === 0) {
+          panel.innerHTML = '<p>No entries yet.</p>';
+          return;
+        }
+        panel.innerHTML = '';
+        data.entries.forEach(entry => {
+          const emoji = moodEmojis[entry.mood] || '';
+          const div = document.createElement('div');
+          div.className = 'entry-item';
+          div.innerHTML = `
+            <div><b>${emoji} You:</b> <span class="entry-text">${entry.user_message}</span></div>
+            <div style="color:#555; font-size:0.9em; margin-top:4px;"><b>Gemini:</b> ${entry.ai_reply}</div>
+            <div class="entry-actions">
+              <button onclick="startEdit('${entry.id}', this)">Edit</button>
+              <button onclick="deleteEntry('${entry.id}')">Delete</button>
+            </div>
+          `;
+          panel.appendChild(div);
+        });
+      } catch (err) {
+        panel.innerHTML = 'Error: ' + err.message;
+      }
+    }
+
+    function startEdit(entryId, btn) {
+      const entryDiv = btn.closest('.entry-item');
+      const textSpan = entryDiv.querySelector('.entry-text');
+      const currentText = textSpan.textContent;
+      const actionsDiv = entryDiv.querySelector('.entry-actions');
+
+      entryDiv.querySelector('div').innerHTML = `<textarea id="edit-${entryId}" rows="2">${currentText}</textarea>`;
+      actionsDiv.innerHTML = `
+        <button onclick="saveEdit('${entryId}')">Save</button>
+        <button onclick="loadEntries()">Cancel</button>
+      `;
+    }
+
+    async function saveEdit(entryId) {
+      const newText = document.getElementById(`edit-${entryId}`).value;
+      try {
+        const user = auth.currentUser;
+        const idToken = await user.getIdToken();
+        const response = await fetch(`/api/entries/${entryId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + idToken
+          },
+          body: JSON.stringify({ user_message: newText })
+        });
+        const data = await response.json();
+        if (data.success) {
+          await loadEntries();
+        } else {
+          alert('Error: ' + data.error);
+        }
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+
+    async function deleteEntry(entryId) {
+      if (!confirm('Delete this entry?')) return;
+      try {
+        const user = auth.currentUser;
+        const idToken = await user.getIdToken();
+        const response = await fetch(`/api/entries/${entryId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': 'Bearer ' + idToken }
+        });
+        const data = await response.json();
+        if (data.success) {
+          await loadEntries();
+        } else {
+          alert('Error: ' + data.error);
+        }
+      } catch (err) {
+        alert('Error: ' + err.message);
       }
     }
   </script>

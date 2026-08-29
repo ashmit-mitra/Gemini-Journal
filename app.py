@@ -78,6 +78,67 @@ Respond with only the single mood word, nothing else."""
 
     return jsonify({'reply': ai_reply, 'mood': mood})
 
+@app.route('/api/entries', methods=['GET'])
+def get_entries():
+    id_token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    try:
+        decoded_token = auth.verify_id_token(id_token)
+        uid = decoded_token['uid']
+    except Exception:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    entries_ref = db.collection('users').document(uid).collection('entries')
+    all_entries = entries_ref.order_by('timestamp', direction=firestore.Query.DESCENDING).get()
+
+    entries_list = []
+    for entry in all_entries:
+        entry_data = entry.to_dict()
+        entries_list.append({
+            'id': entry.id,
+            'user_message': entry_data.get('user_message', ''),
+            'ai_reply': entry_data.get('ai_reply', ''),
+            'mood': entry_data.get('mood', 'neutral')
+        })
+
+    return jsonify({'entries': entries_list})
+
+@app.route('/api/entries/<entry_id>', methods=['DELETE'])
+def delete_entry(entry_id):
+    id_token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    try:
+        decoded_token = auth.verify_id_token(id_token)
+        uid = decoded_token['uid']
+    except Exception:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    try:
+        db.collection('users').document(uid).collection('entries').document(entry_id).delete()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/entries/<entry_id>', methods=['PUT'])
+def edit_entry(entry_id):
+    id_token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    try:
+        decoded_token = auth.verify_id_token(id_token)
+        uid = decoded_token['uid']
+    except Exception:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    data = request.json
+    new_message = data.get('user_message', '')
+    if not new_message:
+        return jsonify({'error': 'No message provided'}), 400
+
+    try:
+        db.collection('users').document(uid).collection('entries').document(entry_id).update({
+            'user_message': new_message
+        })
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/insights', methods=['GET'])
 def insights():
     id_token = request.headers.get('Authorization', '').replace('Bearer ', '')
