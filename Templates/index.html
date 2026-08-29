@@ -1,262 +1,491 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Gemini Journal</title>
-  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
-  <style>
-    body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 0 20px; }
-    #chat-log { border: 1px solid #ccc; padding: 15px; height: 300px; overflow-y: auto; margin-bottom: 10px; }
-    .user-msg { color: #2255aa; margin: 8px 0; }
-    .ai-msg { color: #333; margin: 8px 0; background: #f5f5f5; padding: 8px; border-radius: 6px; }
-    input, button { padding: 8px; margin: 4px 0; }
-    #entry-input { width: 70%; }
-    .entry-item { border: 1px solid #ddd; padding: 10px; margin: 8px 0; border-radius: 6px; }
-    .entry-item textarea { width: 100%; box-sizing: border-box; }
-    .entry-actions { margin-top: 6px; }
-    .entry-actions button { margin-right: 6px; font-size: 0.85em; padding: 4px 8px; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gemini Journal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+<style>
+  :root {
+    --ink: #171a2e;
+    --ink-2: #232748;
+    --panel: #f4efe3;
+    --panel-line: #e2dac8;
+    --gold: #cf9f45;
+    --gold-soft: #e9c98a;
+    --text-main: #eae7dd;
+    --text-muted: #9a9dc4;
+    --text-dark: #2a2620;
+    --text-dark-muted: #6b6355;
+    --danger: #b5654f;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background:
+      radial-gradient(ellipse at 20% -10%, #2a2f57 0%, transparent 55%),
+      radial-gradient(ellipse at 90% 10%, #241f42 0%, transparent 50%),
+      var(--ink);
+    font-family: 'Inter', sans-serif;
+    color: var(--text-main);
+    display: flex;
+    justify-content: center;
+    padding: 48px 20px 80px;
+  }
+
+  .page {
+    width: 100%;
+    max-width: 640px;
+  }
+
+  .masthead {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid rgba(154, 157, 196, 0.25);
+  }
+
+  .masthead h1 {
+    font-family: 'Fraunces', serif;
+    font-optical-sizing: auto;
+    font-weight: 600;
+    font-size: 2.1rem;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+
+  .masthead .eyebrow {
+    display: block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--gold-soft);
+    margin-bottom: 6px;
+  }
+
+  .user-strip {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.88rem;
+    color: var(--text-muted);
+  }
+
+  /* Buttons */
+  button {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 0.85rem;
+    cursor: pointer;
+    border-radius: 7px;
+    border: 1px solid rgba(154, 157, 196, 0.3);
+    background: rgba(255,255,255,0.04);
+    color: var(--text-main);
+    padding: 9px 16px;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  button:hover { border-color: var(--gold-soft); background: rgba(207,159,69,0.1); }
+  button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+  .btn-primary {
+    background: var(--gold);
+    color: #1b1710;
+    border: none;
+    font-weight: 600;
+  }
+  .btn-primary:hover { background: var(--gold-soft); }
+
+  .btn-ghost-danger { color: var(--danger); border-color: rgba(181,101,79,0.35); }
+  .btn-ghost-danger:hover { background: rgba(181,101,79,0.12); border-color: var(--danger); }
+
+  input[type="email"], input[type="password"], input[type="text"], textarea {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.92rem;
+    padding: 10px 12px;
+    border-radius: 7px;
+    border: 1px solid rgba(154, 157, 196, 0.3);
+    background: rgba(255,255,255,0.04);
+    color: var(--text-main);
+    width: 100%;
+  }
+  input::placeholder, textarea::placeholder { color: var(--text-muted); }
+  input:focus-visible, textarea:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
+
+  /* Auth card */
+  .auth-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(154,157,196,0.2);
+    border-radius: 14px;
+    padding: 28px;
+  }
+  .auth-card h3 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 1.15rem;
+    margin: 0 0 12px;
+  }
+  .auth-card + .auth-card { margin-top: 18px; }
+  .field-row { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+
+  /* Action row */
+  .action-row { display: flex; gap: 10px; margin: 22px 0 16px; flex-wrap: wrap; }
+
+  .panel {
+    background: var(--panel);
+    color: var(--text-dark);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+    position: relative;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  }
+  .panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 4px;
+    background: var(--gold);
+    border-radius: 12px 0 0 12px;
+  }
+  .panel b { font-family: 'Fraunces', serif; font-weight: 600; }
+
+  /* Chat log — notebook page */
+  #chat-log {
+    background: var(--panel);
+    border-radius: 14px;
+    padding: 22px 24px;
+    height: 320px;
+    overflow-y: auto;
+    margin-bottom: 14px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    background-image: repeating-linear-gradient(
+      to bottom,
+      transparent,
+      transparent 34px,
+      var(--panel-line) 35px
+    );
+  }
+  .user-msg, .ai-msg {
+    color: var(--text-dark);
+    margin: 0 0 12px;
+    line-height: 35px;
+  }
+  .user-msg b { color: #4a4530; font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; margin-right: 6px; }
+  .ai-msg b { color: var(--gold); font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; margin-right: 6px; }
+  .mood-seal {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--gold-soft);
+    font-size: 0.85rem;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+
+  .composer { display: flex; gap: 10px; }
+  .composer input { flex: 1; }
+
+  /* Entries panel */
+  .entry-item {
+    background: var(--panel);
+    color: var(--text-dark);
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin: 0 0 12px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.22);
+  }
+  .entry-item .entry-text { font-weight: 500; }
+  .entry-item .entry-reply { color: var(--text-dark-muted); font-size: 0.88rem; margin-top: 6px; }
+  .entry-actions { margin-top: 10px; display: flex; gap: 8px; }
+  .entry-actions button { padding: 6px 12px; font-size: 0.78rem; border-color: rgba(42,38,32,0.2); color: var(--text-dark); }
+  .entry-actions button:hover { background: rgba(207,159,69,0.15); }
+  .entry-item textarea { color: var(--text-dark); background: #fff; border-color: rgba(42,38,32,0.2); }
+
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 4px; }
+</style>
 </head>
 <body>
-  <h1>Gemini Journal</h1>
+<div class="page">
 
   <div id="signed-out">
-    <h3>Sign Up</h3>
-    <input type="email" id="signup-email" placeholder="Email">
-    <input type="password" id="signup-password" placeholder="Password">
-    <button onclick="signUp()">Sign Up</button>
+    <div class="masthead">
+      <div>
+        <span class="eyebrow">Private &amp; reflective</span>
+        <h1>Gemini Journal</h1>
+      </div>
+    </div>
 
-    <h3>Log In</h3>
-    <input type="email" id="login-email" placeholder="Email">
-    <input type="password" id="login-password" placeholder="Password">
-    <button onclick="logIn()">Log In</button>
+    <div class="auth-card">
+      <h3>Sign up</h3>
+      <div class="field-row">
+        <input type="email" id="signup-email" placeholder="Email">
+        <input type="password" id="signup-password" placeholder="Password">
+      </div>
+      <button class="btn-primary" onclick="signUp()">Create account</button>
+    </div>
+
+    <div class="auth-card">
+      <h3>Log in</h3>
+      <div class="field-row">
+        <input type="email" id="login-email" placeholder="Email">
+        <input type="password" id="login-password" placeholder="Password">
+      </div>
+      <button class="btn-primary" onclick="logIn()">Log in</button>
+    </div>
   </div>
 
   <div id="signed-in" style="display:none;">
-    <p>Welcome, <span id="user-email"></span>! <button onclick="logOut()">Log Out</button></p>
-<div style="margin: 15px 0;">
-  <button onclick="getInsights()">✨ Get Reflection Insights</button>
-  <button onclick="toggleEntries()">📔 My Entries</button>
-  <div id="insights-panel" style="display:none; background:#eef7ff; padding:12px; border-radius:6px; margin-top:10px;"></div>
-  <div id="entries-panel" style="display:none; margin-top:10px;"></div>
-</div>
+    <div class="masthead">
+      <div>
+        <span class="eyebrow">Private &amp; reflective</span>
+        <h1>Gemini Journal</h1>
+      </div>
+      <div class="user-strip">
+        <span id="user-email"></span>
+        <button onclick="logOut()">Log out</button>
+      </div>
+    </div>
+
+    <div class="action-row">
+      <button class="btn-primary" onclick="getInsights()">✨ Get reflection insights</button>
+      <button onclick="toggleEntries()">📔 My entries</button>
+    </div>
+
+    <div id="insights-panel" class="panel" style="display:none;"></div>
+    <div id="entries-panel" style="display:none;"></div>
+
     <div id="chat-log"></div>
-    <input type="text" id="entry-input" placeholder="Write your journal entry or thought...">
-    <button onclick="sendEntry()">Send</button>
+    <div class="composer">
+      <input type="text" id="entry-input" placeholder="Write your journal entry or thought…">
+      <button class="btn-primary" onclick="sendEntry()">Send</button>
+    </div>
   </div>
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyAbavgoR35l3OxvzXMAYkh02onvK-ErJoc",
-      authDomain: "gemini-journal-ai-1a8c1.firebaseapp.com",
-      projectId: "gemini-journal-ai-1a8c1",
-      storageBucket: "gemini-journal-ai-1a8c1.firebasestorage.app",
-      messagingSenderId: "569758845707",
-      appId: "1:569758845707:web:44951a6ce88cef632eb00e"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
+</div>
 
-    const moodEmojis = {
-      happy: '😊', sad: '😢', anxious: '😰', angry: '😠',
-      excited: '🤩', calm: '😌', neutral: '😐', grateful: '🙏',
-      tired: '😴', hopeful: '🌱'
-    };
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAbavgoR35l3OxvzXMAYkh02onvK-ErJoc",
+    authDomain: "gemini-journal-ai-1a8c1.firebaseapp.com",
+    projectId: "gemini-journal-ai-1a8c1",
+    storageBucket: "gemini-journal-ai-1a8c1.firebasestorage.app",
+    messagingSenderId: "569758845707",
+    appId: "1:569758845707:web:44951a6ce88cef632eb00e"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
 
-    function signUp() {
-      const email = document.getElementById('signup-email').value;
-      const password = document.getElementById('signup-password').value;
-      auth.createUserWithEmailAndPassword(email, password)
-        .catch(error => alert(error.message));
+  const moodEmojis = {
+    happy: '😊', sad: '😢', anxious: '😰', angry: '😠',
+    excited: '🤩', calm: '😌', neutral: '😐', grateful: '🙏',
+    tired: '😴', hopeful: '🌱'
+  };
+
+  function signUp() {
+    const email = document.getElementById('signup-email').value;
+    const password = document.getElementById('signup-password').value;
+    auth.createUserWithEmailAndPassword(email, password)
+      .catch(error => alert(error.message));
+  }
+
+  function logIn() {
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+    auth.signInWithEmailAndPassword(email, password)
+      .catch(error => alert(error.message));
+  }
+
+  function logOut() {
+    auth.signOut();
+  }
+
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      document.getElementById('signed-out').style.display = 'none';
+      document.getElementById('signed-in').style.display = 'block';
+      document.getElementById('user-email').textContent = user.email;
+    } else {
+      document.getElementById('signed-out').style.display = 'block';
+      document.getElementById('signed-in').style.display = 'none';
     }
+  });
 
-    function logIn() {
-      const email = document.getElementById('login-email').value;
-      const password = document.getElementById('login-password').value;
-      auth.signInWithEmailAndPassword(email, password)
-        .catch(error => alert(error.message));
-    }
+  async function sendEntry() {
+    const input = document.getElementById('entry-input');
+    const message = input.value;
+    if (!message) return;
 
-    function logOut() {
-      auth.signOut();
-    }
+    const chatLog = document.getElementById('chat-log');
+    chatLog.innerHTML += `<div class="user-msg"><b>You</b>${message}</div>`;
+    input.value = '';
 
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        document.getElementById('signed-out').style.display = 'none';
-        document.getElementById('signed-in').style.display = 'block';
-        document.getElementById('user-email').textContent = user.email;
+    try {
+      const user = auth.currentUser;
+      const idToken = await user.getIdToken();
+
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + idToken
+        },
+        body: JSON.stringify({ message: message })
+      });
+
+      const data = await response.json();
+      if (data.reply) {
+        const emoji = moodEmojis[data.mood] || '';
+        chatLog.innerHTML += `<div class="ai-msg"><b>Gemini</b>${data.reply} <span class="mood-seal" title="${data.mood}">${emoji}</span></div>`;
       } else {
-        document.getElementById('signed-out').style.display = 'block';
-        document.getElementById('signed-in').style.display = 'none';
+        chatLog.innerHTML += `<div class="ai-msg" style="color:#b5654f;">Error: ${data.error}</div>`;
       }
-    });
-
-    async function sendEntry() {
-      const input = document.getElementById('entry-input');
-      const message = input.value;
-      if (!message) return;
-
-      const chatLog = document.getElementById('chat-log');
-      chatLog.innerHTML += `<div class="user-msg"><b>You:</b> ${message}</div>`;
-      input.value = '';
-
-      try {
-        const user = auth.currentUser;
-        const idToken = await user.getIdToken();
-
-        const response = await fetch('/api/chat', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + idToken
-          },
-          body: JSON.stringify({ message: message })
-        });
-
-        const data = await response.json();
-        if (data.reply) {
-          const emoji = moodEmojis[data.mood] || '';
-          chatLog.innerHTML += `<div class="ai-msg"><b>Gemini:</b> ${data.reply} <span title="${data.mood}">${emoji}</span></div>`;
-        } else {
-          chatLog.innerHTML += `<div class="ai-msg" style="color:red;">Error: ${data.error}</div>`;
-        }
-      } catch (err) {
-        chatLog.innerHTML += `<div class="ai-msg" style="color:red;">Error: ${err.message}</div>`;
-      }
-      chatLog.scrollTop = chatLog.scrollHeight;
+    } catch (err) {
+      chatLog.innerHTML += `<div class="ai-msg" style="color:#b5654f;">Error: ${err.message}</div>`;
     }
+    chatLog.scrollTop = chatLog.scrollHeight;
+  }
 
-    async function getInsights() {
-      const panel = document.getElementById('insights-panel');
-      panel.style.display = 'block';
-      panel.innerHTML = 'Thinking...';
+  async function getInsights() {
+    const panel = document.getElementById('insights-panel');
+    panel.style.display = 'block';
+    panel.innerHTML = 'Thinking…';
 
-      try {
-        const user = auth.currentUser;
-        const idToken = await user.getIdToken();
+    try {
+      const user = auth.currentUser;
+      const idToken = await user.getIdToken();
 
-        const response = await fetch('/api/insights', {
-          method: 'GET',
-          headers: {
-            'Authorization': 'Bearer ' + idToken
-          }
-        });
+      const response = await fetch('/api/insights', {
+        method: 'GET',
+        headers: { 'Authorization': 'Bearer ' + idToken }
+      });
 
-        const data = await response.json();
-        if (data.insight) {
-          panel.innerHTML = '<b>Your Reflection:</b><br>' + data.insight;
-        } else {
-          panel.innerHTML = 'Error: ' + data.error;
-        }
-      } catch (err) {
-        panel.innerHTML = 'Error: ' + err.message;
+      const data = await response.json();
+      if (data.insight) {
+        panel.innerHTML = '<b>Your reflection</b><br><br>' + data.insight;
+      } else {
+        panel.innerHTML = 'Error: ' + data.error;
       }
+    } catch (err) {
+      panel.innerHTML = 'Error: ' + err.message;
     }
+  }
 
-    let entriesVisible = false;
-    async function toggleEntries() {
-      const panel = document.getElementById('entries-panel');
-      entriesVisible = !entriesVisible;
-      if (!entriesVisible) {
-        panel.style.display = 'none';
+  let entriesVisible = false;
+  async function toggleEntries() {
+    const panel = document.getElementById('entries-panel');
+    entriesVisible = !entriesVisible;
+    if (!entriesVisible) {
+      panel.style.display = 'none';
+      return;
+    }
+    panel.style.display = 'block';
+    await loadEntries();
+  }
+
+  async function loadEntries() {
+    const panel = document.getElementById('entries-panel');
+    panel.innerHTML = 'Loading…';
+    try {
+      const user = auth.currentUser;
+      const idToken = await user.getIdToken();
+      const response = await fetch('/api/entries', {
+        method: 'GET',
+        headers: { 'Authorization': 'Bearer ' + idToken }
+      });
+      const data = await response.json();
+      if (!data.entries || data.entries.length === 0) {
+        panel.innerHTML = '<div class="panel">No entries yet — write your first one below.</div>';
         return;
       }
-      panel.style.display = 'block';
-      await loadEntries();
+      panel.innerHTML = '';
+      data.entries.forEach(entry => {
+        const emoji = moodEmojis[entry.mood] || '';
+        const div = document.createElement('div');
+        div.className = 'entry-item';
+        div.innerHTML = `
+          <div><span class="mood-seal" title="${entry.mood}">${emoji}</span> <span class="entry-text">${entry.user_message}</span></div>
+          <div class="entry-reply">${entry.ai_reply}</div>
+          <div class="entry-actions">
+            <button onclick="startEdit('${entry.id}', this)">Edit</button>
+            <button class="btn-ghost-danger" onclick="deleteEntry('${entry.id}')">Delete</button>
+          </div>
+        `;
+        panel.appendChild(div);
+      });
+    } catch (err) {
+      panel.innerHTML = 'Error: ' + err.message;
     }
+  }
 
-    async function loadEntries() {
-      const panel = document.getElementById('entries-panel');
-      panel.innerHTML = 'Loading...';
-      try {
-        const user = auth.currentUser;
-        const idToken = await user.getIdToken();
-        const response = await fetch('/api/entries', {
-          method: 'GET',
-          headers: { 'Authorization': 'Bearer ' + idToken }
-        });
-        const data = await response.json();
-        if (!data.entries || data.entries.length === 0) {
-          panel.innerHTML = '<p>No entries yet.</p>';
-          return;
-        }
-        panel.innerHTML = '';
-        data.entries.forEach(entry => {
-          const emoji = moodEmojis[entry.mood] || '';
-          const div = document.createElement('div');
-          div.className = 'entry-item';
-          div.innerHTML = `
-            <div><b>${emoji} You:</b> <span class="entry-text">${entry.user_message}</span></div>
-            <div style="color:#555; font-size:0.9em; margin-top:4px;"><b>Gemini:</b> ${entry.ai_reply}</div>
-            <div class="entry-actions">
-              <button onclick="startEdit('${entry.id}', this)">Edit</button>
-              <button onclick="deleteEntry('${entry.id}')">Delete</button>
-            </div>
-          `;
-          panel.appendChild(div);
-        });
-      } catch (err) {
-        panel.innerHTML = 'Error: ' + err.message;
+  function startEdit(entryId, btn) {
+    const entryDiv = btn.closest('.entry-item');
+    const textSpan = entryDiv.querySelector('.entry-text');
+    const currentText = textSpan.textContent;
+    const actionsDiv = entryDiv.querySelector('.entry-actions');
+
+    entryDiv.querySelector('div').innerHTML = `<textarea id="edit-${entryId}" rows="2">${currentText}</textarea>`;
+    actionsDiv.innerHTML = `
+      <button onclick="saveEdit('${entryId}')">Save</button>
+      <button onclick="loadEntries()">Cancel</button>
+    `;
+  }
+
+  async function saveEdit(entryId) {
+    const newText = document.getElementById(`edit-${entryId}`).value;
+    try {
+      const user = auth.currentUser;
+      const idToken = await user.getIdToken();
+      const response = await fetch(`/api/entries/${entryId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + idToken
+        },
+        body: JSON.stringify({ user_message: newText })
+      });
+      const data = await response.json();
+      if (data.success) {
+        await loadEntries();
+      } else {
+        alert('Error: ' + data.error);
       }
+    } catch (err) {
+      alert('Error: ' + err.message);
     }
+  }
 
-    function startEdit(entryId, btn) {
-      const entryDiv = btn.closest('.entry-item');
-      const textSpan = entryDiv.querySelector('.entry-text');
-      const currentText = textSpan.textContent;
-      const actionsDiv = entryDiv.querySelector('.entry-actions');
-
-      entryDiv.querySelector('div').innerHTML = `<textarea id="edit-${entryId}" rows="2">${currentText}</textarea>`;
-      actionsDiv.innerHTML = `
-        <button onclick="saveEdit('${entryId}')">Save</button>
-        <button onclick="loadEntries()">Cancel</button>
-      `;
-    }
-
-    async function saveEdit(entryId) {
-      const newText = document.getElementById(`edit-${entryId}`).value;
-      try {
-        const user = auth.currentUser;
-        const idToken = await user.getIdToken();
-        const response = await fetch(`/api/entries/${entryId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + idToken
-          },
-          body: JSON.stringify({ user_message: newText })
-        });
-        const data = await response.json();
-        if (data.success) {
-          await loadEntries();
-        } else {
-          alert('Error: ' + data.error);
-        }
-      } catch (err) {
-        alert('Error: ' + err.message);
+  async function deleteEntry(entryId) {
+    if (!confirm('Delete this entry?')) return;
+    try {
+      const user = auth.currentUser;
+      const idToken = await user.getIdToken();
+      const response = await fetch(`/api/entries/${entryId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + idToken }
+      });
+      const data = await response.json();
+      if (data.success) {
+        await loadEntries();
+      } else {
+        alert('Error: ' + data.error);
       }
+    } catch (err) {
+      alert('Error: ' + err.message);
     }
-
-    async function deleteEntry(entryId) {
-      if (!confirm('Delete this entry?')) return;
-      try {
-        const user = auth.currentUser;
-        const idToken = await user.getIdToken();
-        const response = await fetch(`/api/entries/${entryId}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': 'Bearer ' + idToken }
-        });
-        const data = await response.json();
-        if (data.success) {
-          await loadEntries();
-        } else {
-          alert('Error: ' + data.error);
-        }
-      } catch (err) {
-        alert('Error: ' + err.message);
-      }
-    }
-  </script>
+  }
+</script>
 </body>
 </html>
