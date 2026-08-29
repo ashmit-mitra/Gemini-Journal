@@ -179,6 +179,24 @@
     100% { box-shadow: 0 0 0 0 rgba(181,101,79,0); }
   }
 
+  .speak-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--text-dark-muted);
+    font-size: 0.85rem;
+    padding: 0;
+    margin-left: 2px;
+    vertical-align: middle;
+    cursor: pointer;
+  }
+  .speak-btn:hover { background: rgba(0,0,0,0.08); color: var(--text-dark); }
+  .speak-btn.speaking { color: var(--gold); }
+
   input[type="email"], input[type="password"], input[type="text"], textarea {
     font-family: 'Inter', sans-serif;
     font-size: 0.92rem;
@@ -465,6 +483,8 @@
     }
   }
 
+  let entryCounter = 0;
+
   async function sendEntry() {
     const input = document.getElementById('entry-input');
     const message = input.value;
@@ -490,7 +510,10 @@
       const data = await response.json();
       if (data.reply) {
         const emoji = moodEmojis[data.mood] || '';
-        chatLog.innerHTML += `<div class="ai-msg"><b>Gemini</b>${data.reply} <span class="mood-seal" title="${data.mood}">${emoji}</span></div>`;
+        entryCounter++;
+        const replyId = `reply-${entryCounter}`;
+        window[`__text_${replyId}`] = data.reply;
+        chatLog.innerHTML += `<div class="ai-msg"><b>Gemini</b>${data.reply} <span class="mood-seal" title="${data.mood}">${emoji}</span> <button class="speak-btn" id="btn-${replyId}" onclick="speakReply('${replyId}')" title="Read aloud">🔊</button></div>`;
         loadStreak();
       } else {
         chatLog.innerHTML += `<div class="ai-msg" style="color:#b5654f;">Error: ${data.error}</div>`;
@@ -499,6 +522,30 @@
       chatLog.innerHTML += `<div class="ai-msg" style="color:#b5654f;">Error: ${err.message}</div>`;
     }
     chatLog.scrollTop = chatLog.scrollHeight;
+  }
+
+  function speakReply(replyId) {
+    if (!('speechSynthesis' in window)) {
+      alert('Text-to-speech is not supported in this browser.');
+      return;
+    }
+    const text = window[`__text_${replyId}`];
+    const btn = document.getElementById(`btn-${replyId}`);
+
+    if (speechSynthesis.speaking) {
+      speechSynthesis.cancel();
+      document.querySelectorAll('.speak-btn.speaking').forEach(b => b.classList.remove('speaking'));
+      if (btn && btn.dataset.wasActive === 'true') {
+        btn.dataset.wasActive = 'false';
+        return;
+      }
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1.0;
+    utterance.onstart = () => { if (btn) { btn.classList.add('speaking'); btn.dataset.wasActive = 'true'; } };
+    utterance.onend = () => { if (btn) { btn.classList.remove('speaking'); btn.dataset.wasActive = 'false'; } };
+    speechSynthesis.speak(utterance);
   }
 
   async function getInsights() {
