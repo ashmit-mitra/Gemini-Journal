@@ -6,6 +6,7 @@ import firebase_admin
 from firebase_admin import credentials, auth, firestore
 from google import genai
 from datetime import datetime, timedelta
+from collections import defaultdict
 import os
 
 app = Flask(__name__)
@@ -15,6 +16,20 @@ firebase_admin.initialize_app(cred, {'projectId': 'gemini-journal-ai-1a8c1'})
 db = firestore.client()
 
 gemini_client = genai.Client(api_key=os.environ.get('GOOGLE_API_KEY'))
+
+# Simple in-memory rate limiter: uid -> list of request timestamps
+request_log = defaultdict(list)
+RATE_LIMIT = 15          # max requests
+RATE_WINDOW = 60         # per this many seconds
+
+def is_rate_limited(uid):
+    now = datetime.utcnow()
+    window_start = now - timedelta(seconds=RATE_WINDOW)
+    request_log[uid] = [t for t in request_log[uid] if t > window_start]
+    if len(request_log[uid]) >= RATE_LIMIT:
+        return True
+    request_log[uid].append(now)
+    return False
 
 @app.route('/')
 def home():
@@ -28,6 +43,9 @@ def chat():
         uid = decoded_token['uid']
     except Exception:
         return jsonify({'error': 'Unauthorized'}), 401
+
+    if is_rate_limited(uid):
+        return jsonify({'error': 'Too many requests. Please slow down and try again in a minute.'}), 429
 
     data = request.json
     user_message = data.get('message', '')
@@ -185,6 +203,9 @@ def insights():
         uid = decoded_token['uid']
     except Exception:
         return jsonify({'error': 'Unauthorized'}), 401
+
+    if is_rate_limited(uid):
+        return jsonify({'error': 'Too many requests. Please slow down and try again in a minute.'}), 429
 
     entries_ref = db.collection('users').document(uid).collection('entries')
     all_entries = entries_ref.order_by('timestamp').get()
