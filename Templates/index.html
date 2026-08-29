@@ -309,6 +309,28 @@
     color: var(--text-main);
   }
 
+  .mood-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .mood-bar-label { width: 90px; flex-shrink: 0; font-size: 0.85rem; }
+  .mood-bar-track {
+    flex: 1;
+    height: 14px;
+    background: rgba(0,0,0,0.06);
+    border-radius: 7px;
+    overflow: hidden;
+  }
+  .mood-bar-fill {
+    height: 100%;
+    background: var(--gold);
+    border-radius: 7px;
+    transition: width 0.4s ease;
+  }
+  .mood-bar-count { width: 24px; text-align: right; font-size: 0.8rem; color: var(--text-dark-muted); flex-shrink: 0; }
+
   ::-webkit-scrollbar { width: 8px; }
   ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 4px; }
 </style>
@@ -361,9 +383,11 @@
     <div class="action-row">
       <button class="btn-primary" onclick="getInsights()">✨ Get reflection insights</button>
       <button onclick="toggleEntries()">📔 My entries</button>
+      <button onclick="toggleMoodTrend()">📊 Mood trends</button>
     </div>
 
     <div id="insights-panel" class="panel" style="display:none;"></div>
+    <div id="mood-trend-panel" class="panel" style="display:none;"></div>
     <div id="entries-panel" style="display:none;">
       <div class="entry-filters">
         <input type="text" id="entry-search" placeholder="Search entries…" oninput="renderFilteredEntries()">
@@ -412,7 +436,6 @@
     tired: '😴', hopeful: '🌱'
   };
 
-  // Theme handling
   function applyTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
     const icon = theme === 'light' ? '☀️' : '🌙';
@@ -568,6 +591,52 @@
       } else {
         panel.innerHTML = 'Error: ' + data.error;
       }
+    } catch (err) {
+      panel.innerHTML = 'Error: ' + err.message;
+    }
+  }
+
+  let moodTrendVisible = false;
+  async function toggleMoodTrend() {
+    const panel = document.getElementById('mood-trend-panel');
+    moodTrendVisible = !moodTrendVisible;
+    if (!moodTrendVisible) {
+      panel.style.display = 'none';
+      return;
+    }
+    panel.style.display = 'block';
+    panel.innerHTML = 'Loading…';
+
+    try {
+      const user = auth.currentUser;
+      const idToken = await user.getIdToken();
+      const response = await fetch('/api/mood-trend', {
+        method: 'GET',
+        headers: { 'Authorization': 'Bearer ' + idToken }
+      });
+      const data = await response.json();
+
+      if (!data.mood_counts || Object.keys(data.mood_counts).length === 0) {
+        panel.innerHTML = '<b>Mood trends</b><br><br>No entries yet — write a few to see your mood patterns.';
+        return;
+      }
+
+      const maxCount = Math.max(...Object.values(data.mood_counts));
+      let html = '<b>Mood trends</b><br><br>';
+      Object.entries(data.mood_counts)
+        .sort((a, b) => b[1] - a[1])
+        .forEach(([mood, count]) => {
+          const emoji = moodEmojis[mood] || '';
+          const pct = (count / maxCount) * 100;
+          html += `
+            <div class="mood-bar-row">
+              <div class="mood-bar-label">${emoji} ${mood}</div>
+              <div class="mood-bar-track"><div class="mood-bar-fill" style="width:${pct}%;"></div></div>
+              <div class="mood-bar-count">${count}</div>
+            </div>
+          `;
+        });
+      panel.innerHTML = html;
     } catch (err) {
       panel.innerHTML = 'Error: ' + err.message;
     }

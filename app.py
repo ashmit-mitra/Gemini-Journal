@@ -17,10 +17,9 @@ db = firestore.client()
 
 gemini_client = genai.Client(api_key=os.environ.get('GOOGLE_API_KEY'))
 
-# Simple in-memory rate limiter: uid -> list of request timestamps
 request_log = defaultdict(list)
-RATE_LIMIT = 15          # max requests
-RATE_WINDOW = 60         # per this many seconds
+RATE_LIMIT = 15
+RATE_WINDOW = 60
 
 def is_rate_limited(uid):
     now = datetime.utcnow()
@@ -194,6 +193,34 @@ def get_streak():
     except Exception as e:
         print(f"Streak calculation error: {e}")
         return jsonify({'streak': 0, 'journaled_today': False})
+
+@app.route('/api/mood-trend', methods=['GET'])
+def mood_trend():
+    id_token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    try:
+        decoded_token = auth.verify_id_token(id_token)
+        uid = decoded_token['uid']
+    except Exception:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    try:
+        entries_ref = db.collection('users').document(uid).collection('entries')
+        all_entries = entries_ref.order_by('timestamp').get()
+
+        mood_counts = defaultdict(int)
+        timeline = []
+        for entry in all_entries:
+            entry_data = entry.to_dict()
+            mood = entry_data.get('mood', 'neutral')
+            ts = entry_data.get('timestamp')
+            mood_counts[mood] += 1
+            if ts:
+                timeline.append({'date': ts.strftime('%b %d'), 'mood': mood})
+
+        return jsonify({'mood_counts': dict(mood_counts), 'timeline': timeline})
+    except Exception as e:
+        print(f"Mood trend error: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/insights', methods=['GET'])
 def insights():
