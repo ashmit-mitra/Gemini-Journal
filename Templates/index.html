@@ -533,6 +533,7 @@
       document.getElementById('signed-in').style.display = 'block';
       document.getElementById('user-email').textContent = user.email;
       loadStreak();
+      showEmptyStateIfNeeded();
     } else {
       document.getElementById('signed-out').style.display = 'block';
       document.getElementById('signed-in').style.display = 'none';
@@ -557,6 +558,23 @@
       }
     } catch (err) {
       console.error('Streak load error:', err);
+    }
+  }
+    async function showEmptyStateIfNeeded() {
+    try {
+      const user = auth.currentUser;
+      const idToken = await user.getIdToken();
+      const response = await fetch('/api/entries', {
+        method: 'GET',
+        headers: { 'Authorization': 'Bearer ' + idToken }
+      });
+      const data = await response.json();
+      const chatLog = document.getElementById('chat-log');
+      if ((!data.entries || data.entries.length === 0) && chatLog.innerHTML.trim() === '') {
+        chatLog.innerHTML = `<div class="ai-msg"><b>Gemini</b>Welcome! This is your private space to think out loud. Write your first entry below — I'll keep track, notice patterns, and check in on how you're doing along the way. 🌱</div>`;
+      }
+    } catch (err) {
+      console.error('Empty state check error:', err);
     }
   }
 
