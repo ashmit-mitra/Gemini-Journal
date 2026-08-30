@@ -501,6 +501,22 @@
     excited: '🤩', calm: '😌', neutral: '😐', grateful: '🙏',
     tired: '😴', hopeful: '🌱'
   };
+    function formatMarkdown(text) {
+    return text
+      .replace(/\n/g, '<br>')
+      .replace(/### (.*?)(<br>|$)/g, '<br><strong>$1</strong><br>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/^\* (.*)$/gm, '• $1')
+      .replace(/^- (.*)$/gm, '• $1');
+  }
+    function stripForSpeech(text) {
+    return text
+      .replace(/#{1,6}\s?/g, '')
+      .replace(/\*\*/g, '')
+      .replace(/\*/g, '')
+      .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '')
+      .trim();
+  }
 
   function applyTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
@@ -631,6 +647,7 @@
     const chatLog = document.getElementById('chat-log');
     chatLog.innerHTML += `<div class="user-msg"><b>You</b>${message}</div>`;
     input.value = '';
+        chatLog.innerHTML += `<div class="ai-msg" id="typing-indicator"><b>Gemini</b><em>typing…</em></div>`;
 
     try {
       const user = auth.currentUser;
@@ -646,17 +663,21 @@
       });
 
       const data = await response.json();
+            const typingEl = document.getElementById('typing-indicator');
+      if (typingEl) typingEl.remove();
       if (data.reply) {
+                const formattedReply = formatMarkdown(data.reply);
         const emoji = moodEmojis[data.mood] || '';
         entryCounter++;
         const replyId = `reply-${entryCounter}`;
-        window[`__text_${replyId}`] = data.reply;
-        chatLog.innerHTML += `<div class="ai-msg"><b>Gemini</b>${data.reply} <span class="mood-seal" title="${data.mood}">${emoji}</span> <button class="speak-btn" id="btn-${replyId}" onclick="speakReply('${replyId}')" title="Read aloud">🔊</button></div>`;
-        loadStreak();
+                window[`__text_${replyId}`] = stripForSpeech(data.reply);
+              chatLog.innerHTML += `<div class="ai-msg"><b>Gemini</b>${formattedReply} <span class="mood-seal" title="${data.mood}">${emoji}</span> <button class="speak-btn" id="btn-${replyId}" onclick="speakReply('${replyId}')" title="Read aloud">🔊</button></div>`;
       } else {
         chatLog.innerHTML += `<div class="ai-msg" style="color:#b5654f;">Error: ${data.error}</div>`;
       }
-    } catch (err) {
+        } catch (err) {
+      const typingEl = document.getElementById('typing-indicator');
+      if (typingEl) typingEl.remove();
       chatLog.innerHTML += `<div class="ai-msg" style="color:#b5654f;">Error: ${err.message}</div>`;
     }
     chatLog.scrollTop = chatLog.scrollHeight;
@@ -702,7 +723,7 @@
 
       const data = await response.json();
       if (data.insight) {
-        panel.innerHTML = '<b>Your reflection</b><br><br>' + data.insight;
+                panel.innerHTML = '<b>Your reflection</b><br><br>' + formatMarkdown(data.insight);
       } else {
         panel.innerHTML = 'Error: ' + data.error;
       }
