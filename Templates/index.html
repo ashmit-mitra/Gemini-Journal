@@ -291,8 +291,34 @@
     vertical-align: middle;
   }
 
-  .composer { display: flex; gap: 10px; }
-  .composer input { flex: 1; }
+    .composer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--panel);
+    border-radius: 999px;
+    padding: 8px 8px 8px 22px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3), 0 0 0 1px rgba(207,159,69,0.25);
+  }
+  .composer input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-dark);
+    padding: 8px 4px;
+  }
+  .composer input::placeholder { color: var(--text-dark-muted); }
+  .composer input:focus-visible { outline: none; }
+  .composer .btn-mic, .composer .btn-primary {
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
 
   .entry-item {
     background: var(--panel);
@@ -381,6 +407,7 @@
       <h3>Sign up</h3>
       <div class="field-row">
         <input type="email" id="signup-email" placeholder="Email">
+                <input type="text" id="signup-name" placeholder="Your name">
         <input type="password" id="signup-password" placeholder="Password">
       </div>
       <button class="btn-primary" onclick="signUp()">Create account</button>
@@ -444,12 +471,12 @@
       </div>
       <div id="entries-list"></div>
     </div>
-
+        <h2 id="greeting-heading" style="font-family:'Fraunces',serif; font-weight:500; font-size:1.6rem; text-align:center; margin: 10px 0 24px;"></h2>
     <div id="chat-log"></div>
     <div class="composer">
-      <input type="text" id="entry-input" placeholder="Write your journal entry or thought…">
+            <input type="text" id="entry-input" placeholder="Ask Gemini, or write what's on your mind…" onkeydown="if(event.key==='Enter'){sendEntry();}">
       <button id="mic-btn" class="btn-mic" onclick="toggleVoiceInput()" title="Speak your entry" style="display:none;">🎤</button>
-      <button class="btn-primary" onclick="sendEntry()">Send</button>
+      <button class="btn-primary" onclick="sendEntry()" title="Send">➤</button>
     </div>
   </div>
 
@@ -494,10 +521,14 @@
   const savedTheme = localStorage.getItem('gj-theme') || 'dark';
   applyTheme(savedTheme);
 
-  function signUp() {
+    function signUp() {
+    const name = document.getElementById('signup-name').value;
     const email = document.getElementById('signup-email').value;
     const password = document.getElementById('signup-password').value;
     auth.createUserWithEmailAndPassword(email, password)
+      .then(userCredential => {
+        return userCredential.user.updateProfile({ displayName: name });
+      })
       .catch(error => alert(error.message));
   }
 
@@ -534,6 +565,7 @@
       document.getElementById('user-email').textContent = user.email;
       loadStreak();
       showEmptyStateIfNeeded();
+            setGreeting();
     } else {
       document.getElementById('signed-out').style.display = 'block';
       document.getElementById('signed-in').style.display = 'none';
@@ -559,6 +591,17 @@
     } catch (err) {
       console.error('Streak load error:', err);
     }
+  }
+    function setGreeting() {
+    const user = auth.currentUser;
+    if (!user) return;
+        const name = user.displayName || user.email.split('@')[0];
+    const hour = new Date().getHours();
+    let timeGreeting = 'Good evening';
+    if (hour < 12) timeGreeting = 'Good morning';
+    else if (hour < 17) timeGreeting = 'Good afternoon';
+    const heading = document.getElementById('greeting-heading');
+    if (heading) heading.textContent = `🌙 ${timeGreeting}, ${name}`;
   }
     async function showEmptyStateIfNeeded() {
     try {
