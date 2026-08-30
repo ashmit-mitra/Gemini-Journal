@@ -11,7 +11,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
 <style>
   :root {
-    --ink: #171a2e;
+        --ink: #0a0a0f;
     --panel: #f4efe3;
     --panel-line: #e2dac8;
     --gold: #cf9f45;
@@ -21,12 +21,19 @@
     --text-dark: #2a2620;
     --text-dark-muted: #6b6355;
     --danger: #b5654f;
-    --bg-glow-1: #2a2f57;
-    --bg-glow-2: #241f42;
+        --bg-glow-1: #16213e;
+    --bg-glow-2: #0f1729;
     --border-soft: rgba(154, 157, 196, 0.25);
     --border-soft-2: rgba(154, 157, 196, 0.3);
     --hover-tint: rgba(207,159,69,0.1);
     --field-bg: rgba(255,255,255,0.04);
+        --composer-bg: #1c1c24;
+    --composer-text: #eae7dd;
+    --composer-placeholder: #8a8a95;
+        --surface: #1c1c24;
+    --surface-line: #2a2a34;
+    --surface-text: #eae7dd;
+    --surface-text-muted: #9a9dc4;
   }
 
   [data-theme="light"] {
@@ -46,6 +53,13 @@
     --border-soft-2: rgba(122, 113, 92, 0.3);
     --hover-tint: rgba(184,130,58,0.12);
     --field-bg: rgba(0,0,0,0.03);
+        --composer-bg: var(--panel);
+    --composer-text: var(--text-dark);
+    --composer-placeholder: var(--text-dark-muted);
+        --surface: var(--panel);
+    --surface-line: var(--panel-line);
+    --surface-text: var(--text-dark);
+    --surface-text-muted: var(--text-dark-muted);
   }
 
   * { box-sizing: border-box; }
@@ -238,9 +252,9 @@
 
   .action-row { display: flex; gap: 10px; margin: 22px 0 16px; flex-wrap: wrap; }
 
-  .panel {
-    background: var(--panel);
-    color: var(--text-dark);
+    .panel {
+    background: var(--surface);
+    color: var(--surface-text);
     border-radius: 12px;
     padding: 18px 20px;
     margin-bottom: 16px;
@@ -257,8 +271,8 @@
   }
   .panel b { font-family: 'Fraunces', serif; font-weight: 600; }
 
-  #chat-log {
-    background: var(--panel);
+    #chat-log {
+    background: var(--surface);
     border-radius: 14px;
     padding: 22px 24px;
     height: 320px;
@@ -269,11 +283,11 @@
       to bottom,
       transparent,
       transparent 34px,
-      var(--panel-line) 35px
+      var(--surface-line) 35px
     );
   }
-  .user-msg, .ai-msg {
-    color: var(--text-dark);
+    .user-msg, .ai-msg {
+    color: var(--surface-text);
     margin: 0 0 12px;
     line-height: 35px;
   }
@@ -291,23 +305,23 @@
     vertical-align: middle;
   }
 
-    .composer {
+        .composer {
     display: flex;
     align-items: center;
     gap: 8px;
-    background: var(--panel);
+    background: var(--composer-bg);
     border-radius: 999px;
     padding: 8px 8px 8px 22px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.3), 0 0 0 1px rgba(207,159,69,0.25);
   }
-  .composer input {
+      .composer input {
     flex: 1;
     background: transparent;
     border: none;
-    color: var(--text-dark);
+    color: var(--composer-text);
     padding: 8px 4px;
   }
-  .composer input::placeholder { color: var(--text-dark-muted); }
+  .composer input::placeholder { color: var(--composer-placeholder); }
   .composer input:focus-visible { outline: none; }
   .composer .btn-mic, .composer .btn-primary {
     border-radius: 50%;
@@ -320,20 +334,20 @@
     flex-shrink: 0;
   }
 
-  .entry-item {
-    background: var(--panel);
-    color: var(--text-dark);
+    .entry-item {
+    background: var(--surface);
+    color: var(--surface-text);
     border-radius: 12px;
     padding: 16px 18px;
     margin: 0 0 12px;
     box-shadow: 0 6px 18px rgba(0,0,0,0.18);
   }
   .entry-item .entry-text { font-weight: 500; }
-  .entry-item .entry-reply { color: var(--text-dark-muted); font-size: 0.88rem; margin-top: 6px; }
+  .entry-item .entry-reply { color: var(--surface-text-muted); font-size: 0.88rem; margin-top: 6px; }
   .entry-actions { margin-top: 10px; display: flex; gap: 8px; }
   .entry-actions button { padding: 6px 12px; font-size: 0.78rem; border-color: rgba(42,38,32,0.2); color: var(--text-dark); }
   .entry-actions button:hover { background: rgba(207,159,69,0.15); }
-  .entry-item textarea { color: var(--text-dark); background: #fff; border-color: rgba(42,38,32,0.2); }
+    .entry-item textarea { color: var(--surface-text); background: var(--surface); border-color: rgba(255,255,255,0.15); }
 
   .entry-filters { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
   .entry-filters input { flex: 1; min-width: 140px; }
