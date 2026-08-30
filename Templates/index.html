@@ -309,8 +309,8 @@
   .entry-actions button:hover { background: rgba(207,159,69,0.15); }
   .entry-item textarea { color: var(--text-dark); background: #fff; border-color: rgba(42,38,32,0.2); }
 
-  .entry-filters { display: flex; gap: 8px; margin-bottom: 12px; }
-  .entry-filters input { flex: 1; }
+  .entry-filters { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  .entry-filters input { flex: 1; min-width: 140px; }
   .entry-filters select {
     font-family: 'Inter', sans-serif;
     padding: 10px 12px;
@@ -319,6 +319,9 @@
     background: var(--field-bg);
     color: var(--text-main);
   }
+
+  .export-row { display: flex; gap: 8px; margin-bottom: 14px; }
+  .export-row button { font-size: 0.78rem; padding: 6px 12px; }
 
   .mood-bar-row {
     display: flex;
@@ -344,6 +347,22 @@
 
   ::-webkit-scrollbar { width: 8px; }
   ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 4px; }
+
+  @media print {
+    body * { visibility: hidden; }
+    #print-area, #print-area * { visibility: visible; }
+    #print-area {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      color: #000;
+      background: #fff;
+    }
+    #print-area h2 { font-family: 'Fraunces', serif; }
+    #print-area .print-entry { margin-bottom: 18px; page-break-inside: avoid; }
+    #print-area .print-date { font-size: 0.75rem; color: #666; text-transform: uppercase; letter-spacing: 0.05em; }
+  }
+  #print-area { display: none; }
 </style>
 </head>
 <body>
@@ -419,6 +438,10 @@
           <option value="hopeful">🌱 Hopeful</option>
         </select>
       </div>
+      <div class="export-row">
+        <button onclick="exportAsText()">⬇️ Export as text</button>
+        <button onclick="exportAsPDF()">🖨️ Export as PDF</button>
+      </div>
       <div id="entries-list"></div>
     </div>
 
@@ -431,6 +454,8 @@
   </div>
 
 </div>
+
+<div id="print-area"></div>
 
 <script>
   const firebaseConfig = {
@@ -734,6 +759,64 @@
       `;
       listDiv.appendChild(div);
     });
+  }
+
+  function getCurrentlyFilteredEntries() {
+    const searchTerm = document.getElementById('entry-search').value.toLowerCase();
+    const moodTerm = document.getElementById('mood-filter').value;
+    return allEntries.filter(entry => {
+      const matchesSearch = !searchTerm || entry.user_message.toLowerCase().includes(searchTerm);
+      const matchesMood = !moodTerm || entry.mood === moodTerm;
+      return matchesSearch && matchesMood;
+    });
+  }
+
+  function exportAsText() {
+    const entries = getCurrentlyFilteredEntries();
+    if (entries.length === 0) {
+      alert('No entries to export.');
+      return;
+    }
+    let text = 'GEMINI JOURNAL — EXPORTED ENTRIES\n';
+    text += '='.repeat(40) + '\n\n';
+    entries.forEach((entry, i) => {
+      text += `Entry ${i + 1}  [Mood: ${entry.mood}]\n`;
+      text += `You: ${entry.user_message}\n`;
+      text += `Gemini: ${entry.ai_reply}\n`;
+      text += '-'.repeat(40) + '\n\n';
+    });
+
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'gemini-journal-entries.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function exportAsPDF() {
+    const entries = getCurrentlyFilteredEntries();
+    if (entries.length === 0) {
+      alert('No entries to export.');
+      return;
+    }
+    const printArea = document.getElementById('print-area');
+    let html = '<h2>Gemini Journal — Exported Entries</h2>';
+    entries.forEach((entry, i) => {
+      const emoji = moodEmojis[entry.mood] || '';
+      html += `
+        <div class="print-entry">
+          <div class="print-date">Entry ${i + 1} · ${emoji} ${entry.mood}</div>
+          <p><strong>You:</strong> ${entry.user_message}</p>
+          <p><strong>Gemini:</strong> ${entry.ai_reply}</p>
+        </div>
+      `;
+    });
+    printArea.innerHTML = html;
+    window.print();
   }
 
   function startEdit(entryId, btn) {
