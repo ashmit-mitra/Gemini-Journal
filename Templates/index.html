@@ -11,9 +11,9 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
 <style>
   :root {
-        --ink: #0a0a0f;
-    --panel: #f4efe3;
-    --panel-line: #e2dac8;
+    --ink: #0a0a0f;
+    --panel: #161622;
+    --panel-line: #2b2a3a;
     --gold: #cf9f45;
     --gold-soft: #e9c98a;
     --text-main: #eae7dd;
@@ -21,45 +21,57 @@
     --text-dark: #2a2620;
     --text-dark-muted: #6b6355;
     --danger: #b5654f;
-        --bg-glow-1: #16213e;
+    --bg-glow-1: #16213e;
     --bg-glow-2: #0f1729;
     --border-soft: rgba(154, 157, 196, 0.25);
     --border-soft-2: rgba(154, 157, 196, 0.3);
     --hover-tint: rgba(207,159,69,0.1);
     --field-bg: rgba(255,255,255,0.04);
-        --composer-bg: #1c1c24;
+    --composer-bg: #15151e;
     --composer-text: #eae7dd;
     --composer-placeholder: #8a8a95;
-        --surface: #1c1c24;
-    --surface-line: #2a2a34;
+    --surface: #14141d;
+    --surface-line: #262635;
     --surface-text: #eae7dd;
     --surface-text-muted: #9a9dc4;
+
+    /* Futuristic Edge Reflection Tokens (Dark Mode) */
+    --glow-border: rgba(207, 159, 69, 0.35);
+    --glow-edge-highlight: inset 0 1px 1px 0 rgba(255, 255, 255, 0.2), inset 0 -1px 1px 0 rgba(0, 229, 255, 0.15);
+    --glow-box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 15px rgba(207, 159, 69, 0.18), 0 0 1px 1px rgba(0, 229, 255, 0.2);
+    --glow-hover-shadow: 0 12px 36px rgba(0, 0, 0, 0.6), 0 0 25px rgba(207, 159, 69, 0.35), 0 0 2px 1px rgba(0, 229, 255, 0.4);
   }
 
   [data-theme="light"] {
-    --ink: #f6f1e4;
-    --panel: #fffaf0;
-    --panel-line: #ecdfc4;
+    --ink: #f5f3ec;
+    --panel: #ffffff;
+    --panel-line: #e4dcce;
     --gold: #b8823a;
     --gold-soft: #8f651f;
-    --text-main: #3a3225;
-    --text-muted: #7a715c;
+    --text-main: #2b2723;
+    --text-muted: #6e675b;
     --text-dark: #2a2620;
     --text-dark-muted: #6b6355;
     --danger: #a1543f;
-    --bg-glow-1: #f0e2c0;
-    --bg-glow-2: #f7ead0;
+    --bg-glow-1: #e7dfcf;
+    --bg-glow-2: #f2ebe0;
     --border-soft: rgba(122, 113, 92, 0.25);
     --border-soft-2: rgba(122, 113, 92, 0.3);
     --hover-tint: rgba(184,130,58,0.12);
-    --field-bg: rgba(0,0,0,0.03);
-        --composer-bg: var(--panel);
+    --field-bg: rgba(255, 255, 255, 0.6);
+    --composer-bg: #ffffff;
     --composer-text: var(--text-dark);
     --composer-placeholder: var(--text-dark-muted);
-        --surface: var(--panel);
+    --surface: #ffffff;
     --surface-line: var(--panel-line);
     --surface-text: var(--text-dark);
     --surface-text-muted: var(--text-dark-muted);
+
+    /* Futuristic Edge Reflection Tokens (Light Mode) */
+    --glow-border: rgba(184, 130, 58, 0.45);
+    --glow-edge-highlight: inset 0 1px 2px 0 rgba(255, 255, 255, 0.9), inset 0 -1px 2px 0 rgba(184, 130, 58, 0.2);
+    --glow-box-shadow: 0 10px 28px rgba(184, 130, 58, 0.08), 0 0 20px rgba(184, 130, 58, 0.12), 0 0 1px 1px rgba(184, 130, 58, 0.35);
+    --glow-hover-shadow: 0 14px 34px rgba(184, 130, 58, 0.16), 0 0 26px rgba(184, 130, 58, 0.25), 0 0 2px 1px rgba(184, 130, 58, 0.5);
   }
 
   * { box-sizing: border-box; }
@@ -156,7 +168,7 @@
     background: var(--field-bg);
     color: var(--text-main);
     padding: 9px 16px;
-    transition: border-color 0.15s ease, background 0.15s ease;
+    transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
   }
   button:hover { border-color: var(--gold-soft); background: var(--hover-tint); }
   button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
@@ -235,11 +247,18 @@
   input::placeholder, textarea::placeholder { color: var(--text-muted); }
   input:focus-visible, textarea:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
 
+  /* Futuristic Reflected Cards */
   .auth-card {
-    background: var(--field-bg);
-    border: 1px solid var(--border-soft);
+    background: var(--surface);
+    border: 1px solid var(--glow-border);
     border-radius: 14px;
     padding: 28px;
+    box-shadow: var(--glow-edge-highlight), var(--glow-box-shadow);
+    backdrop-filter: blur(8px);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+  .auth-card:hover {
+    box-shadow: var(--glow-edge-highlight), var(--glow-hover-shadow);
   }
   .auth-card h3 {
     font-family: 'Fraunces', serif;
@@ -252,14 +271,21 @@
 
   .action-row { display: flex; gap: 10px; margin: 22px 0 16px; flex-wrap: wrap; }
 
-    .panel {
+  /* Panels with Edge Highlights */
+  .panel {
     background: var(--surface);
     color: var(--surface-text);
+    border: 1px solid var(--glow-border);
     border-radius: 12px;
     padding: 18px 20px;
     margin-bottom: 16px;
     position: relative;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    box-shadow: var(--glow-edge-highlight), var(--glow-box-shadow);
+    backdrop-filter: blur(8px);
+    transition: box-shadow 0.2s ease;
+  }
+  .panel:hover {
+    box-shadow: var(--glow-edge-highlight), var(--glow-hover-shadow);
   }
   .panel::before {
     content: '';
@@ -271,22 +297,26 @@
   }
   .panel b { font-family: 'Fraunces', serif; font-weight: 600; }
 
-    #chat-log {
+  /* Reflective Chat Log */
+  #chat-log {
     background: var(--surface);
+    border: 1px solid var(--glow-border);
     border-radius: 14px;
     padding: 22px 24px;
     height: 320px;
     overflow-y: auto;
     margin-bottom: 14px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    box-shadow: var(--glow-edge-highlight), var(--glow-box-shadow);
+    backdrop-filter: blur(8px);
     background-image: repeating-linear-gradient(
       to bottom,
       transparent,
       transparent 34px,
       var(--surface-line) 35px
     );
+    transition: box-shadow 0.2s ease;
   }
-    .user-msg, .ai-msg {
+  .user-msg, .ai-msg {
     color: var(--surface-text);
     margin: 0 0 12px;
     line-height: 35px;
@@ -305,16 +335,24 @@
     vertical-align: middle;
   }
 
-        .composer {
+  /* Floating Bottom Glow Composer */
+  .composer {
     display: flex;
     align-items: center;
     gap: 8px;
     background: var(--composer-bg);
+    border: 1px solid var(--glow-border);
     border-radius: 999px;
     padding: 8px 8px 8px 22px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3), 0 0 0 1px rgba(207,159,69,0.25);
+    box-shadow: var(--glow-edge-highlight), var(--glow-box-shadow);
+    backdrop-filter: blur(12px);
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
   }
-      .composer input {
+  .composer:focus-within {
+    border-color: var(--gold);
+    box-shadow: var(--glow-edge-highlight), var(--glow-hover-shadow);
+  }
+  .composer input {
     flex: 1;
     background: transparent;
     border: none;
@@ -334,20 +372,27 @@
     flex-shrink: 0;
   }
 
-    .entry-item {
+  /* Entry Items with Edge Lighting */
+  .entry-item {
     background: var(--surface);
     color: var(--surface-text);
+    border: 1px solid var(--glow-border);
     border-radius: 12px;
     padding: 16px 18px;
     margin: 0 0 12px;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+    box-shadow: var(--glow-edge-highlight), var(--glow-box-shadow);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .entry-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--glow-edge-highlight), var(--glow-hover-shadow);
   }
   .entry-item .entry-text { font-weight: 500; }
   .entry-item .entry-reply { color: var(--surface-text-muted); font-size: 0.88rem; margin-top: 6px; }
   .entry-actions { margin-top: 10px; display: flex; gap: 8px; }
-    .entry-actions button { padding: 6px 12px; font-size: 0.78rem; border-color: rgba(255,255,255,0.15); color: var(--surface-text); }
+  .entry-actions button { padding: 6px 12px; font-size: 0.78rem; border-color: rgba(255,255,255,0.15); color: var(--surface-text); }
   .entry-actions button:hover { background: rgba(207,159,69,0.15); }
-    .entry-item textarea { color: var(--surface-text); background: var(--surface); border-color: rgba(255,255,255,0.15); }
+  .entry-item textarea { color: var(--surface-text); background: var(--surface); border-color: rgba(255,255,255,0.15); }
 
   .entry-filters { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
   .entry-filters input { flex: 1; min-width: 140px; }
