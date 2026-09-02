@@ -630,6 +630,15 @@
     </div>
         <h2 id="greeting-heading" style="font-family:'Fraunces',serif; font-weight:500; font-size:1.6rem; text-align:center; margin: 10px 0 24px;"></h2>
     <div id="chat-log"></div>
+    <!-- Image Preview Thumbnail Card -->
+    <div id="imagePreviewContainer" style="display: none; align-items: center; gap: 12px; margin-bottom: 10px; background: var(--surface); padding: 8px 14px; border-radius: 12px; border: 1px solid var(--glow-border); box-shadow: var(--glow-box-shadow);">
+      <img id="imagePreview" src="" alt="Selected Preview" style="width: 54px; height: 54px; border-radius: 8px; object-fit: cover; border: 1px solid var(--gold);">
+      <div style="flex: 1; min-width: 0;">
+        <div id="imagePreviewName" style="font-size: 0.85rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></div>
+        <div style="font-size: 0.72rem; color: var(--gold-soft); font-family: 'IBM Plex Mono', monospace;">Ready for Gemini analysis</div>
+      </div>
+      <button type="button" onclick="clearAttachment()" style="padding: 4px 10px; font-size: 0.75rem; border-radius: 6px; border: 1px solid rgba(181,101,79,0.4); color: var(--danger); background: transparent;">✕ Remove</button>
+    </div>
     <div class="composer">
       <!-- Attachment Menu Wrapper -->
       <div class="attach-container" style="position: relative; display: inline-flex; align-items: center; margin-right: 6px;">
@@ -898,6 +907,8 @@ async function generateDailyPrompt() {
     currentAttachment = null;
     const fileElem = document.getElementById('journalFileInput');
     if (fileElem) fileElem.value = '';
+    const previewContainer = document.getElementById('imagePreviewContainer');
+    if (previewContainer) previewContainer.style.display = 'none';
         chatLog.innerHTML += `<div class="ai-msg" id="typing-indicator"><b>Gemini</b><em>typing…</em></div>`;
 
     try {
@@ -1311,13 +1322,29 @@ function handleFileSelected(event) {
       data: base64Data
     };
 
+    const previewContainer = document.getElementById('imagePreviewContainer');
+    const previewImg = document.getElementById('imagePreview');
+    const previewName = document.getElementById('imagePreviewName');
+    if (previewContainer && previewImg && previewName) {
+      previewImg.src = e.target.result;
+      previewName.textContent = file.name;
+      previewContainer.style.display = 'flex';
+    }
+
     const input = document.getElementById('entry-input');
     if (input) {
-      input.value = `[Attached: ${file.name}] ` + input.value;
       input.focus();
     }
   };
   reader.readAsDataURL(file);
+}
+
+function clearAttachment() {
+  currentAttachment = null;
+  const fileElem = document.getElementById('journalFileInput');
+  if (fileElem) fileElem.value = '';
+  const previewContainer = document.getElementById('imagePreviewContainer');
+  if (previewContainer) previewContainer.style.display = 'none';
 }
 </script>
 </body>
