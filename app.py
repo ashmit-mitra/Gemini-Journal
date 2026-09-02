@@ -1,3 +1,5 @@
+import base64
+from google.genai import types
 from dotenv import load_dotenv
 load_dotenv(override=True)
 
@@ -40,7 +42,6 @@ PERSONA_PROMPTS = {
     'action': "You are a solution-focused action planner. Help extract clarity, break down overwhelming thoughts into 2-3 concrete micro-steps, and focus on practical momentum."
 }
 @app.route('/api/chat', methods=['POST'])
-@app.route('/api/chat', methods=['POST'])
 def chat():
     id_token = request.headers.get('Authorization', '').replace('Bearer ', '')
     try:
@@ -53,10 +54,29 @@ def chat():
         return jsonify({'error': 'Too many requests. Please slow down and try again in a minute.'}), 429
 
     data = request.json or {}
-    user_message = data.get('message', '')
-    persona_key = data.get('persona', 'empathetic')
-    if not user_message:
-        return jsonify({'error': 'No message provided'}), 400
+    user_message = data.get('message', '').strip()
+    persona_key = data.get('persona', 'empathetic').lower()
+    attachment = data.get('attachment')
+
+    if not user_message and not attachment:
+        return jsonify({'error': 'No message or attachment provided'}), 400
+
+    # Build multimodal content parts
+    contents = []
+
+    # If an image attachment is provided, decode and append Part
+    if attachment and attachment.get('data'):
+        try:
+            image_bytes = base64.b64decode(attachment['data'])
+            mime = attachment.get('mimeType', 'image/jpeg')
+            contents.append(types.Part.from_bytes(data=image_bytes, mime_type=mime))
+        except Exception as e:
+            print(f"Error decoding attachment: {e}")
+
+    # Persona system instruction
+    system_instruction = PERSONA_PROMPTS.get(persona_key, PERSONA_PROMPTS.get('empathetic', ''))
+    prompt_text = f"{system_instruction}\n\nUser entry: {user_message}" if user_message else system_instruction
+    contents.append(prompt_text)
 
     system_instruction = PERSONA_PROMPTS.get(persona_key, PERSONA_PROMPTS['empathetic'])
 
@@ -69,7 +89,23 @@ def chat():
         conversation_history.append({'role': 'user', 'parts': [{'text': entry_data['user_message']}]})
         conversation_history.append({'role': 'model', 'parts': [{'text': entry_data['ai_reply']}]})
 
-    conversation_history.append({'role': 'user', 'parts': [{'text': f"[Context: Respond strictly adopting the following persona: {system_instruction}]\n\nUser Entry: {user_message}"}]})
+    # Build parts for the current message
+    user_parts = []
+
+    # If attachment exists, decode and append Part
+    if attachment and attachment.get('data'):
+        try:
+            image_bytes = base64.b64decode(attachment['data'])
+            mime = attachment.get('mimeType', 'image/jpeg')
+            user_parts.append(types.Part.from_bytes(data=image_bytes, mime_type=mime))
+        except Exception as err:
+            print(f"Attachment decode error: {err}")
+
+    # Append the text prompt with persona context
+    persona_text = PERSONA_PROMPTS.get(persona_key, PERSONA_PROMPTS.get('empathetic', ''))
+    user_parts.append(types.Part.from_text(text=f"[Context: Respond strictly adopting the following persona: {persona_text}]\n\nUser entry: {user_message}"))
+
+    conversation_history.append({'role': 'user', 'parts': user_parts})
 
     try:
         response = gemini_client.models.generate_content(
