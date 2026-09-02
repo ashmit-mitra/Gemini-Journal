@@ -73,7 +73,7 @@ def chat():
 
     try:
         response = gemini_client.models.generate_content(
-            model="gemini-1.5-flash",
+            model="gemini-3.6-flash",
             contents=conversation_history
         )
         ai_reply = response.text
@@ -89,7 +89,7 @@ Entry: "{user_message}"
 
 Respond with only the single mood word, nothing else."""
         mood_response = gemini_client.models.generate_content(
-            model="gemini-1.5-flash",
+            model="gemini-3.6-flash",
             contents=mood_prompt
         )
         mood = mood_response.text.strip().lower()
@@ -117,7 +117,7 @@ def get_daily_prompt():
     try:
         prompt_instruction = "Generate one thoughtful, creative, and deep journaling prompt for today. Keep it under 25 words. Do not use quotes or introductory text."
         response = gemini_client.models.generate_content(
-            model="gemini-1.5-flash",
+            model="gemini-3.6-flash",
             contents=prompt_instruction
         )
         return jsonify({'prompt': response.text.strip()})
