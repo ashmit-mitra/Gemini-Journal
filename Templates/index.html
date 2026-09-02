@@ -448,6 +448,44 @@
     #print-area .print-date { font-size: 0.75rem; color: #666; text-transform: uppercase; letter-spacing: 0.05em; }
   }
   #print-area { display: none; }
+  .persona-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .persona-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--gold-soft);
+    letter-spacing: 0.08em;
+  }
+  .persona-pills {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .persona-pill {
+    padding: 5px 12px;
+    font-size: 0.78rem;
+    border-radius: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border-soft-2);
+    color: var(--text-muted);
+    transition: all 0.2s ease;
+  }
+  .persona-pill:hover {
+    border-color: var(--gold-soft);
+    color: var(--text-main);
+  }
+  .persona-pill.active {
+    background: var(--hover-tint);
+    border-color: var(--gold);
+    color: var(--gold-soft);
+    box-shadow: 0 0 10px rgba(207, 159, 69, 0.25);
+  }
 </style>
 </head>
 <body>
@@ -503,6 +541,17 @@
       <button class="btn-primary" onclick="getInsights()">✨ Get reflection insights</button>
       <button onclick="toggleEntries()">📔 My entries</button>
       <button onclick="toggleMoodTrend()">📊 Mood trends</button>
+      <button onclick="generateDailyPrompt()">💡 Inspire me</button>
+    </div>
+
+    <div class="persona-container">
+      <span class="persona-label">Persona:</span>
+      <div class="persona-pills">
+        <button class="persona-pill active" onclick="setPersona('empathetic', this)">🌿 Empathetic</button>
+        <button class="persona-pill" onclick="setPersona('socratic', this)">🧭 Socratic Coach</button>
+        <button class="persona-pill" onclick="setPersona('stoic', this)">🏛️ Stoic</button>
+        <button class="persona-pill" onclick="setPersona('action', this)">⚡ Action Planner</button>
+      </div>
     </div>
 
     <div id="insights-panel" class="panel" style="display:none;"></div>
@@ -695,9 +744,63 @@
       console.error('Empty state check error:', err);
     }
   }
+let currentPersona = 'empathetic';
 
+  function setPersona(persona, btn) {
+    currentPersona = persona;
+    document.querySelectorAll('.persona-pill').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  async function generateDailyPrompt() {
+    const input = document.getElementById('entry-input');
+    input.placeholder = 'Generating an inspiring prompt…';
+    try {
+      const user = auth.currentUser;
+      const idToken = await user.getIdToken();
+      const res = await fetch('/api/daily-prompt', {
+        headers: { 'Authorization': 'Bearer ' + idToken }
+      });
+      const data = await res.json();
+      if (data.prompt) {
+        input.value = data.prompt + ' ';
+        input.focus();
+      }
+    } catch (err) {
+      console.error('Prompt error:', err);
+    } finally {
+      input.placeholder = "Ask Gemini, or write what's on your mind…";
+    }
+  }
   let entryCounter = 0;
+let currentPersona = 'empathetic';
 
+function setPersona(persona, btn) {
+  currentPersona = persona;
+  document.querySelectorAll('.persona-pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+async function generateDailyPrompt() {
+  const input = document.getElementById('entry-input');
+  input.placeholder = 'Generating an inspiring prompt…';
+  try {
+    const user = auth.currentUser;
+    const idToken = await user.getIdToken();
+    const res = await fetch('/api/daily-prompt', {
+      headers: { 'Authorization': 'Bearer ' + idToken }
+    });
+    const data = await res.json();
+    if (data.prompt) {
+      input.value = data.prompt + ' ';
+      input.focus();
+    }
+  } catch (err) {
+    console.error('Prompt error:', err);
+  } finally {
+    input.placeholder = "Ask Gemini, or write what's on your mind…";
+  }
+}
   async function sendEntry() {
     const input = document.getElementById('entry-input');
     const message = input.value;
@@ -718,8 +821,11 @@
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + idToken
         },
-        body: JSON.stringify({ message: message })
-      });
+        body: JSON.stringify({ 
+        message: message, 
+        persona: currentPersona 
+      })
+    });
 
       const data = await response.json();
             const typingEl = document.getElementById('typing-indicator');

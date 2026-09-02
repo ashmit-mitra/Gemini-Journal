@@ -33,7 +33,13 @@ def is_rate_limited(uid):
 @app.route('/')
 def home():
     return render_template('index.html')
-
+PERSONA_PROMPTS = {
+    'empathetic': "You are an empathetic, supportive, and validating journaling companion. Acknowledge feelings warmly, offer gentle perspective, and provide a safe space.",
+    'socratic': "You are a Socratic reflection coach. Challenge assumptions gently, ask 1-2 probing questions to help the user uncover deeper insights, and avoid simple reassurance.",
+    'stoic': "You are a Stoic reflection guide inspired by Marcus Aurelius and Epictetus. Emphasize resilience, emotional clarity, distinguishing between what is inside vs outside personal control, and staying grounded.",
+    'action': "You are a solution-focused action planner. Help extract clarity, break down overwhelming thoughts into 2-3 concrete micro-steps, and focus on practical momentum."
+}
+@app.route('/api/chat', methods=['POST'])
 @app.route('/api/chat', methods=['POST'])
 def chat():
     id_token = request.headers.get('Authorization', '').replace('Bearer ', '')
@@ -46,13 +52,16 @@ def chat():
     if is_rate_limited(uid):
         return jsonify({'error': 'Too many requests. Please slow down and try again in a minute.'}), 429
 
-    data = request.json
+    data = request.json or {}
     user_message = data.get('message', '')
+    persona_key = data.get('persona', 'empathetic')
     if not user_message:
         return jsonify({'error': 'No message provided'}), 400
 
+    system_instruction = PERSONA_PROMPTS.get(persona_key, PERSONA_PROMPTS['empathetic'])
+
     entries_ref = db.collection('users').document(uid).collection('entries')
-    past_entries = entries_ref.order_by('timestamp').limit_to_last(10).get()
+    past_entries = entries_ref.order_by('timestamp').limit_to_last(8).get()
 
     conversation_history = []
     for entry in past_entries:
@@ -60,11 +69,11 @@ def chat():
         conversation_history.append({'role': 'user', 'parts': [{'text': entry_data['user_message']}]})
         conversation_history.append({'role': 'model', 'parts': [{'text': entry_data['ai_reply']}]})
 
-    conversation_history.append({'role': 'user', 'parts': [{'text': user_message}]})
+    conversation_history.append({'role': 'user', 'parts': [{'text': f"[Context: Respond strictly adopting the following persona: {system_instruction}]\n\nUser Entry: {user_message}"}]})
 
     try:
         response = gemini_client.models.generate_content(
-            model="gemini-3.6-flash",
+            model="gemini-1.5-flash",
             contents=conversation_history
         )
         ai_reply = response.text
@@ -80,7 +89,7 @@ Entry: "{user_message}"
 
 Respond with only the single mood word, nothing else."""
         mood_response = gemini_client.models.generate_content(
-            model="gemini-3.6-flash",
+            model="gemini-1.5-flash",
             contents=mood_prompt
         )
         mood = mood_response.text.strip().lower()
@@ -91,10 +100,30 @@ Respond with only the single mood word, nothing else."""
         'user_message': user_message,
         'ai_reply': ai_reply,
         'mood': mood,
+        'persona': persona_key,
         'timestamp': firestore.SERVER_TIMESTAMP
     })
 
     return jsonify({'reply': ai_reply, 'mood': mood})
+@app.route('/api/daily-prompt', methods=['GET'])
+def get_daily_prompt():
+    id_token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    try:
+        decoded_token = auth.verify_id_token(id_token)
+        uid = decoded_token['uid']
+    except Exception:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    try:
+        prompt_instruction = "Generate one thoughtful, creative, and deep journaling prompt for today. Keep it under 25 words. Do not use quotes or introductory text."
+        response = gemini_client.models.generate_content(
+            model="gemini-1.5-flash",
+            contents=prompt_instruction
+        )
+        return jsonify({'prompt': response.text.strip()})
+    except Exception as e:
+        print(f"Daily prompt error: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/entries', methods=['GET'])
 def get_entries():
