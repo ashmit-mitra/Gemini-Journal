@@ -220,18 +220,19 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 22px; height: 22px;
+    width: 26px; height: 26px;
     border-radius: 50%;
     border: none;
     background: transparent;
-    color: var(--text-dark-muted);
-    font-size: 0.85rem;
+    color: var(--gold-soft);
+    font-size: 0.95rem;
     padding: 0;
-    margin-left: 2px;
+    margin-left: 6px;
     vertical-align: middle;
     cursor: pointer;
+    transition: background 0.15s ease, transform 0.15s ease;
   }
-  .speak-btn:hover { background: rgba(0,0,0,0.08); color: var(--text-dark); }
+  .speak-btn:hover { background: rgba(207,159,69,0.15); transform: scale(1.1); }
   .speak-btn.speaking { color: var(--gold); }
 
   input[type="email"], input[type="password"], input[type="text"], textarea {
@@ -268,7 +269,6 @@
   }
   .auth-card + .auth-card { margin-top: 18px; }
   .field-row { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
-
   .action-row { display: flex; gap: 10px; margin: 22px 0 16px; flex-wrap: wrap; }
 
   /* Panels with Edge Highlights */
@@ -318,21 +318,26 @@
   }
   .user-msg, .ai-msg {
     color: var(--surface-text);
-    margin: 0 0 12px;
-    line-height: 35px;
+    margin: 0 0 14px;
+    line-height: 1.6;
   }
-  .user-msg b { color: #4a4530; font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; margin-right: 6px; }
-  .ai-msg b { color: var(--gold); font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; margin-right: 6px; }
+  .user-msg b { color: var(--gold-soft); font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; margin-right: 8px; }
+  .ai-msg b { color: var(--gold); font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; margin-right: 8px; }
+  
+  /* Expressive Mood Emoji Badge (Replaced brown circle) */
   .mood-seal {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 22px; height: 22px;
-    border-radius: 50%;
-    background: var(--gold-soft);
-    font-size: 0.85rem;
-    margin-left: 4px;
+    font-size: 1.25rem;
+    line-height: 1;
+    margin-left: 6px;
     vertical-align: middle;
+    filter: drop-shadow(0 0 4px rgba(207, 159, 69, 0.4));
+    transition: transform 0.2s ease;
+  }
+  .mood-seal:hover {
+    transform: scale(1.2);
   }
 
   /* Floating Bottom Glow Composer */
@@ -414,7 +419,7 @@
     gap: 10px;
     margin-bottom: 10px;
   }
-  .mood-bar-label { width: 90px; flex-shrink: 0; font-size: 0.85rem; }
+  .mood-bar-label { width: 110px; flex-shrink: 0; font-size: 0.85rem; }
   .mood-bar-track {
     flex: 1;
     height: 14px;
@@ -487,54 +492,54 @@
     box-shadow: 0 0 10px rgba(207, 159, 69, 0.25);
   }
   .attach-btn {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 6px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #7d6e5a;
-  transition: background-color 0.2s;
-}
-.attach-btn:hover {
-  background-color: rgba(0, 0, 0, 0.06);
-}
-.attach-menu {
-  display: none;
-  position: absolute;
-  bottom: calc(100% + 14px);
-  left: 0;
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 8px;
-  min-width: 210px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  z-index: 9999;
-}
-.attach-menu.show {
-  display: block;
-}
-.attach-menu-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #2b2621;
-  cursor: pointer;
-  transition: background-color 0.15s;
-}
-.attach-menu-item:hover {
-  background-color: #f7f4ee;
-}
-.attach-menu-item svg {
-  color: #5c544b;
-}
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #7d6e5a;
+    transition: background-color 0.2s;
+  }
+  .attach-btn:hover {
+    background-color: rgba(0, 0, 0, 0.06);
+  }
+  .attach-menu {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 14px);
+    left: 0;
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 8px;
+    min-width: 210px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    z-index: 9999;
+  }
+  .attach-menu.show {
+    display: block;
+  }
+  .attach-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #2b2621;
+    cursor: pointer;
+    transition: background-color 0.15s;
+  }
+  .attach-menu-item:hover {
+    background-color: #f7f4ee;
+  }
+  .attach-menu-item svg {
+    color: #5c544b;
+  }
 </style>
 </head>
 <body>
@@ -553,7 +558,7 @@
       <h3>Sign up</h3>
       <div class="field-row">
         <input type="email" id="signup-email" placeholder="Email">
-                <input type="text" id="signup-name" placeholder="Your name">
+        <input type="text" id="signup-name" placeholder="Your name">
         <input type="password" id="signup-password" placeholder="Password">
       </div>
       <button class="btn-primary" onclick="signUp()">Create account</button>
@@ -616,6 +621,7 @@
           <option value="angry">😠 Angry</option>
           <option value="excited">🤩 Excited</option>
           <option value="calm">😌 Calm</option>
+          <option value="reflective">🤔 Reflective</option>
           <option value="neutral">😐 Neutral</option>
           <option value="grateful">🙏 Grateful</option>
           <option value="tired">😴 Tired</option>
@@ -628,8 +634,10 @@
       </div>
       <div id="entries-list"></div>
     </div>
-        <h2 id="greeting-heading" style="font-family:'Fraunces',serif; font-weight:500; font-size:1.6rem; text-align:center; margin: 10px 0 24px;"></h2>
+    
+    <h2 id="greeting-heading" style="font-family:'Fraunces',serif; font-weight:500; font-size:1.6rem; text-align:center; margin: 10px 0 24px;"></h2>
     <div id="chat-log"></div>
+
     <!-- Image Preview Thumbnail Card -->
     <div id="imagePreviewContainer" style="display: none; align-items: center; gap: 12px; margin-bottom: 10px; background: var(--surface); padding: 8px 14px; border-radius: 12px; border: 1px solid var(--glow-border); box-shadow: var(--glow-box-shadow);">
       <img id="imagePreview" src="" alt="Selected Preview" style="width: 54px; height: 54px; border-radius: 8px; object-fit: cover; border: 1px solid var(--gold);">
@@ -639,6 +647,7 @@
       </div>
       <button type="button" onclick="clearAttachment()" style="padding: 4px 10px; font-size: 0.75rem; border-radius: 6px; border: 1px solid rgba(181,101,79,0.4); color: var(--danger); background: transparent;">✕ Remove</button>
     </div>
+
     <div class="composer">
       <!-- Attachment Menu Wrapper -->
       <div class="attach-container" style="position: relative; display: inline-flex; align-items: center; margin-right: 6px;">
@@ -676,7 +685,7 @@
           </div>
         </div>
       </div>
-            <input type="text" id="entry-input" placeholder="Ask Gemini, or write what's on your mind…" onkeydown="if(event.key==='Enter'){sendEntry();}">
+      <input type="text" id="entry-input" placeholder="Ask Gemini, or write what's on your mind…" onkeydown="if(event.key==='Enter'){sendEntry();}">
       <button id="mic-btn" class="btn-mic" onclick="toggleVoiceInput()" title="Speak your entry" style="display:none;">🎤</button>
       <button class="btn-primary" onclick="sendEntry()" title="Send">➤</button>
     </div>
@@ -699,11 +708,20 @@
   const auth = firebase.auth();
 
   const moodEmojis = {
-    happy: '😊', sad: '😢', anxious: '😰', angry: '😠',
-    excited: '🤩', calm: '😌', neutral: '😐', grateful: '🙏',
-    tired: '😴', hopeful: '🌱'
+    happy: '😊', 
+    sad: '😢', 
+    anxious: '😰', 
+    angry: '😠',
+    excited: '🤩', 
+    calm: '😌', 
+    reflective: '🤔',
+    neutral: '😐', 
+    grateful: '🙏',
+    tired: '😴', 
+    hopeful: '🌱'
   };
-    function formatMarkdown(text) {
+
+  function formatMarkdown(text) {
     return text
       .replace(/\n/g, '<br>')
       .replace(/### (.*?)(<br>|$)/g, '<br><strong>$1</strong><br>')
@@ -711,7 +729,8 @@
       .replace(/^\* (.*)$/gm, '• $1')
       .replace(/^- (.*)$/gm, '• $1');
   }
-    function stripForSpeech(text) {
+
+  function stripForSpeech(text) {
     return text
       .replace(/#{1,6}\s?/g, '')
       .replace(/\*\*/g, '')
@@ -739,7 +758,7 @@
   const savedTheme = localStorage.getItem('gj-theme') || 'dark';
   applyTheme(savedTheme);
 
-    function signUp() {
+  function signUp() {
     const name = document.getElementById('signup-name').value;
     const email = document.getElementById('signup-email').value;
     const password = document.getElementById('signup-password').value;
@@ -783,7 +802,7 @@
       document.getElementById('user-email').textContent = user.email;
       loadStreak();
       showEmptyStateIfNeeded();
-            setGreeting();
+      setGreeting();
     } else {
       document.getElementById('signed-out').style.display = 'block';
       document.getElementById('signed-in').style.display = 'none';
@@ -810,10 +829,11 @@
       console.error('Streak load error:', err);
     }
   }
-    function setGreeting() {
+
+  function setGreeting() {
     const user = auth.currentUser;
     if (!user) return;
-        const name = user.displayName || user.email.split('@')[0];
+    const name = user.displayName || user.email.split('@')[0];
     const hour = new Date().getHours();
     let timeGreeting = 'Good evening';
     if (hour < 12) timeGreeting = 'Good morning';
@@ -821,7 +841,8 @@
     const heading = document.getElementById('greeting-heading');
     if (heading) heading.textContent = `🌙 ${timeGreeting}, ${name}`;
   }
-    async function showEmptyStateIfNeeded() {
+
+  async function showEmptyStateIfNeeded() {
     try {
       const user = auth.currentUser;
       const idToken = await user.getIdToken();
@@ -838,7 +859,8 @@
       console.error('Empty state check error:', err);
     }
   }
-let currentPersona = 'empathetic';
+
+  let currentPersona = 'empathetic';
 
   function setPersona(persona, btn) {
     currentPersona = persona;
@@ -866,34 +888,9 @@ let currentPersona = 'empathetic';
       input.placeholder = "Ask Gemini, or write what's on your mind…";
     }
   }
+
   let entryCounter = 0;
 
-function setPersona(persona, btn) {
-  currentPersona = persona;
-  document.querySelectorAll('.persona-pill').forEach(p => p.classList.remove('active'));
-  btn.classList.add('active');
-}
-
-async function generateDailyPrompt() {
-  const input = document.getElementById('entry-input');
-  input.placeholder = 'Generating an inspiring prompt…';
-  try {
-    const user = auth.currentUser;
-    const idToken = await user.getIdToken();
-    const res = await fetch('/api/daily-prompt', {
-      headers: { 'Authorization': 'Bearer ' + idToken }
-    });
-    const data = await res.json();
-    if (data.prompt) {
-      input.value = data.prompt + ' ';
-      input.focus();
-    }
-  } catch (err) {
-    console.error('Prompt error:', err);
-  } finally {
-    input.placeholder = "Ask Gemini, or write what's on your mind…";
-  }
-}
   async function sendEntry() {
     const input = document.getElementById('entry-input');
     const message = input.value;
@@ -909,7 +906,7 @@ async function generateDailyPrompt() {
     if (fileElem) fileElem.value = '';
     const previewContainer = document.getElementById('imagePreviewContainer');
     if (previewContainer) previewContainer.style.display = 'none';
-        chatLog.innerHTML += `<div class="ai-msg" id="typing-indicator"><b>Gemini</b><em>typing…</em></div>`;
+    chatLog.innerHTML += `<div class="ai-msg" id="typing-indicator"><b>Gemini</b><em>typing…</em></div>`;
 
     try {
       const user = auth.currentUser;
@@ -922,26 +919,27 @@ async function generateDailyPrompt() {
           'Authorization': 'Bearer ' + idToken
         },
         body: JSON.stringify({ 
-        message: message, 
-        persona: currentPersona,
-        attachment: attachmentToSend
-      })
-    });
+          message: message, 
+          persona: currentPersona,
+          attachment: attachmentToSend
+        })
+      });
 
       const data = await response.json();
-            const typingEl = document.getElementById('typing-indicator');
+      const typingEl = document.getElementById('typing-indicator');
       if (typingEl) typingEl.remove();
       if (data.reply) {
-                const formattedReply = formatMarkdown(data.reply);
-        const emoji = moodEmojis[data.mood] || '';
+        const formattedReply = formatMarkdown(data.reply);
+        const moodKey = (data.mood || 'reflective').toLowerCase();
+        const emoji = moodEmojis[moodKey] || '✨';
         entryCounter++;
         const replyId = `reply-${entryCounter}`;
-                window[`__text_${replyId}`] = stripForSpeech(data.reply);
-              chatLog.innerHTML += `<div class="ai-msg"><b>Gemini</b>${formattedReply} <span class="mood-seal" title="${data.mood}">${emoji}</span> <button class="speak-btn" id="btn-${replyId}" onclick="speakReply('${replyId}')" title="Read aloud">🔊</button></div>`;
+        window[`__text_${replyId}`] = stripForSpeech(data.reply);
+        chatLog.innerHTML += `<div class="ai-msg"><b>Gemini</b>${formattedReply} <span class="mood-seal" title="${data.mood}">${emoji}</span> <button class="speak-btn" id="btn-${replyId}" onclick="speakReply('${replyId}')" title="Read aloud">🔊</button></div>`;
       } else {
         chatLog.innerHTML += `<div class="ai-msg" style="color:#b5654f;">Error: ${data.error}</div>`;
       }
-        } catch (err) {
+    } catch (err) {
       const typingEl = document.getElementById('typing-indicator');
       if (typingEl) typingEl.remove();
       chatLog.innerHTML += `<div class="ai-msg" style="color:#b5654f;">Error: ${err.message}</div>`;
@@ -989,7 +987,7 @@ async function generateDailyPrompt() {
 
       const data = await response.json();
       if (data.insight) {
-                panel.innerHTML = '<b>Your reflection</b><br><br>' + formatMarkdown(data.insight);
+        panel.innerHTML = '<b>Your reflection</b><br><br>' + formatMarkdown(data.insight);
       } else {
         panel.innerHTML = 'Error: ' + data.error;
       }
@@ -1028,7 +1026,7 @@ async function generateDailyPrompt() {
       Object.entries(data.mood_counts)
         .sort((a, b) => b[1] - a[1])
         .forEach(([mood, count]) => {
-          const emoji = moodEmojis[mood] || '';
+          const emoji = moodEmojis[mood] || '✨';
           const pct = (count / maxCount) * 100;
           html += `
             <div class="mood-bar-row">
@@ -1094,7 +1092,7 @@ async function generateDailyPrompt() {
 
     listDiv.innerHTML = '';
     filtered.forEach(entry => {
-      const emoji = moodEmojis[entry.mood] || '';
+      const emoji = moodEmojis[entry.mood] || '✨';
       const div = document.createElement('div');
       div.className = 'entry-item';
       div.innerHTML = `
@@ -1154,7 +1152,7 @@ async function generateDailyPrompt() {
     const printArea = document.getElementById('print-area');
     let html = '<h2>Gemini Journal — Exported Entries</h2>';
     entries.forEach((entry, i) => {
-      const emoji = moodEmojis[entry.mood] || '';
+      const emoji = moodEmojis[entry.mood] || '✨';
       html += `
         <div class="print-entry">
           <div class="print-date">Entry ${i + 1} · ${emoji} ${entry.mood}</div>
@@ -1287,65 +1285,66 @@ async function generateDailyPrompt() {
       recognition.start();
     }
   }
+
   function toggleAttachMenu(event) {
-  event.stopPropagation();
-  const menu = document.getElementById('attachMenu');
-  if (menu) menu.classList.toggle('show');
-}
-
-document.addEventListener('click', (e) => {
-  const menu = document.getElementById('attachMenu');
-  const attachBtn = document.getElementById('attachBtn');
-  if (menu && !menu.contains(e.target) && (!attachBtn || !attachBtn.contains(e.target))) {
-    menu.classList.remove('show');
+    event.stopPropagation();
+    const menu = document.getElementById('attachMenu');
+    if (menu) menu.classList.toggle('show');
   }
-});
 
-function triggerFileUpload() {
-  const menu = document.getElementById('attachMenu');
-  if (menu) menu.classList.remove('show');
-  document.getElementById('journalFileInput').click();
-}
+  document.addEventListener('click', (e) => {
+    const menu = document.getElementById('attachMenu');
+    const attachBtn = document.getElementById('attachBtn');
+    if (menu && !menu.contains(e.target) && (!attachBtn || !attachBtn.contains(e.target))) {
+      menu.classList.remove('show');
+    }
+  });
 
-let currentAttachment = null;
+  function triggerFileUpload() {
+    const menu = document.getElementById('attachMenu');
+    if (menu) menu.classList.remove('show');
+    document.getElementById('journalFileInput').click();
+  }
 
-function handleFileSelected(event) {
-  const file = event.target.files[0];
-  if (!file) return;
+  let currentAttachment = null;
 
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const base64Data = e.target.result.split(',')[1];
-    currentAttachment = {
-      filename: file.name,
-      mimeType: file.type || 'image/jpeg',
-      data: base64Data
+  function handleFileSelected(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const base64Data = e.target.result.split(',')[1];
+      currentAttachment = {
+        filename: file.name,
+        mimeType: file.type || 'image/jpeg',
+        data: base64Data
+      };
+
+      const previewContainer = document.getElementById('imagePreviewContainer');
+      const previewImg = document.getElementById('imagePreview');
+      const previewName = document.getElementById('imagePreviewName');
+      if (previewContainer && previewImg && previewName) {
+        previewImg.src = e.target.result;
+        previewName.textContent = file.name;
+        previewContainer.style.display = 'flex';
+      }
+
+      const input = document.getElementById('entry-input');
+      if (input) {
+        input.focus();
+      }
     };
+    reader.readAsDataURL(file);
+  }
 
+  function clearAttachment() {
+    currentAttachment = null;
+    const fileElem = document.getElementById('journalFileInput');
+    if (fileElem) fileElem.value = '';
     const previewContainer = document.getElementById('imagePreviewContainer');
-    const previewImg = document.getElementById('imagePreview');
-    const previewName = document.getElementById('imagePreviewName');
-    if (previewContainer && previewImg && previewName) {
-      previewImg.src = e.target.result;
-      previewName.textContent = file.name;
-      previewContainer.style.display = 'flex';
-    }
-
-    const input = document.getElementById('entry-input');
-    if (input) {
-      input.focus();
-    }
-  };
-  reader.readAsDataURL(file);
-}
-
-function clearAttachment() {
-  currentAttachment = null;
-  const fileElem = document.getElementById('journalFileInput');
-  if (fileElem) fileElem.value = '';
-  const previewContainer = document.getElementById('imagePreviewContainer');
-  if (previewContainer) previewContainer.style.display = 'none';
-}
+    if (previewContainer) previewContainer.style.display = 'none';
+  }
 </script>
 </body>
 </html>
